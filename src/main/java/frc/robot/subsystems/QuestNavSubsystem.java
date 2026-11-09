@@ -4,6 +4,8 @@ import java.util.Optional;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
 
+import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -38,6 +40,11 @@ public class QuestNavSubsystem extends SubsystemBase {
     private PoseFrame latestPoseFrame = null;
 
     private Translation2d _calculatedOffsetToRobotCenter = new Translation2d();
+
+    // Field layout for the current game; used to report the distance to a chosen AprilTag.
+    private static final AprilTagFieldLayout FIELD_LAYOUT =
+            AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    private static final int DEFAULT_TARGET_TAG_ID = 25;
     private int _calculatedOffsetToRobotCenterCount = 0;
     private String networkTableRoot = "questnav";
 
@@ -47,6 +54,8 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     public QuestNavSubsystem(CommandSwerveDrivetrain drivetrain) {
         this.drivetrain = drivetrain;
+        // Editable on the dashboard to measure against a different tag.
+        SmartDashboard.putNumber(networkTableRoot + "/Target Tag ID", DEFAULT_TARGET_TAG_ID);
         // Initialization code for the QuestNav subsystem
         questNav.onConnected(() -> DriverStation.reportWarning("QuestNav connected", false));
         questNav.onDisconnected(() -> DriverStation.reportError("QuestNav disconnected", false));
@@ -98,11 +107,31 @@ public class QuestNavSubsystem extends SubsystemBase {
 
                 Pose3d robotPose = questPose.transformBy(ROBOT_TO_QUEST.inverse());
                 latestPoseFrame = poseFrame;
+                SmartDashboard.putNumberArray(networkTableRoot + "/Robot Pose", new double[] {
+                        robotPose.getX(), robotPose.getY(), robotPose.getZ(),
+                        robotPose.getRotation().getX(), robotPose.getRotation().getY(),
+                        robotPose.getRotation().getZ() });
                 drivetrain.addVisionMeasurement(robotPose.toPose2d(), timestamp, QUESTNAV_STD_DEVS);
             }
         }
 
-        // This method will be called once per scheduler run
+        int tagId = (int) SmartDashboard.getNumber(networkTableRoot + "/Target Tag ID", DEFAULT_TARGET_TAG_ID);
+        SmartDashboard.putNumber(networkTableRoot + "/Distance To Target Tag",
+                getDistanceToTag(tagId).orElse(-1.0));
+    }
+
+    /**
+     * Floor-plane distance in meters from the Quest-derived robot pose ({@link #getRobotPose()})
+     * to the given AprilTag. Empty if there is no pose yet or the tag is not on this field.
+     */
+    public Optional<Double> getDistanceToTag(int tagId) {
+        Optional<Pose3d> robotPose = getRobotPose();
+        Optional<Pose3d> tagPose = FIELD_LAYOUT.getTagPose(tagId);
+        if (robotPose.isEmpty() || tagPose.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(robotPose.get().toPose2d().getTranslation()
+                .getDistance(tagPose.get().toPose2d().getTranslation()));
     }
 
     /**
