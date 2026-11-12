@@ -30,7 +30,7 @@ public class QuestNavSubsystem extends SubsystemBase {
     QuestNav questNav = new QuestNav();
     CommandSwerveDrivetrain drivetrain;
     // Translation and rotation from robot to QuestNav camera
-    Transform3d ROBOT_TO_QUEST = new Transform3d(0, 0, 0.3, new Rotation3d(0, 0, -Math.PI / 2)); 
+    Transform3d ROBOT_TO_QUEST = new Transform3d(-0.05264058, -0.259433613333333, 0.3, new Rotation3d(0, 0, -Math.PI / 2)); 
     Transform3d ROBOT_TO_QUEST_SIM = new Transform3d(-0.02010203, -0.30405, 0.3, new Rotation3d(0, 0, -Math.PI / 2)); 
     Matrix<N3, N1> QUESTNAV_STD_DEVS = VecBuilder.fill(0.02, 0.02, 0.0872665); 
 
@@ -42,7 +42,7 @@ public class QuestNavSubsystem extends SubsystemBase {
     private Translation2d _calculatedOffsetToRobotCenter = new Translation2d();
 
     // Field layout for the current game; used to report the distance to a chosen AprilTag.
-    private static final AprilTagFieldLayout FIELD_LAYOUT =
+    public static final AprilTagFieldLayout FIELD_LAYOUT =
             AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
     private static final int DEFAULT_TARGET_TAG_ID = 25;
     private int _calculatedOffsetToRobotCenterCount = 0;
@@ -170,6 +170,17 @@ public class QuestNavSubsystem extends SubsystemBase {
             SmartDashboard.putBoolean(networkTableRoot + "/Reset Pose", true);
             softReset(pose);
         }
+    }
+
+    /**
+     * Robot pose from the latest tracking frame, without the soft reset. This is the same pose
+     * that goes to the drivetrain's pose estimator. Empty until the first tracking frame.
+     */
+    public Optional<Pose2d> getQuestRobotPose() {
+        if (latestPoseFrame == null) {
+            return Optional.empty();
+        }
+        return Optional.of(getProcessedRobotPose().toPose2d());
     }
 
     public Optional<Pose3d> getRobotPose() {

@@ -1,0 +1,1399 @@
+<title>QuestNav Test Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a field manual. Sticky contents rail on wide screens, one reading column, full-width
+   drawings in plan view (looking down at the floor) with the tag always on the left. */
+:root {
+  --paper: #f4f5f2;
+  --sheet: #fbfbf9;
+  --ink: #1d2226;
+  --ink-2: #4b555c;
+  --rule: #d5d9d4;
+  --accent: #c8540a;      /* team orange: floor tape, section numbers */
+  --bumper: #b8232c;      /* red bumpers */
+  --laser: #d81b2a;       /* red laser beam */
+  --headset: #3d5a80;     /* the Quest */
+  --blue: #1f5fbf;        /* blue alliance */
+  --floor: #e9ebe6;
+  --warn-bg: #fbeee4;
+  --warn-ink: #7a3305;
+  --note-bg: #e8eef4;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", sans-serif;
+  --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #15191c; --sheet: #1b2024; --ink: #e6e9e6; --ink-2: #a5aeb3; --rule: #333b40;
+    --accent: #f08a3c; --bumper: #e0525a; --laser: #ff5a63; --headset: #8fb3dd; --blue: #6b9be6; --floor: #20262a;
+    --warn-bg: #3a2416; --warn-ink: #f6c7a3; --note-bg: #1e2a36; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #15191c; --sheet: #1b2024; --ink: #e6e9e6; --ink-2: #a5aeb3; --rule: #333b40;
+  --accent: #f08a3c; --bumper: #e0525a; --laser: #ff5a63; --headset: #8fb3dd; --blue: #6b9be6; --floor: #20262a;
+  --warn-bg: #3a2416; --warn-ink: #f6c7a3; --note-bg: #1e2a36; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  z-index: 10; background: var(--paper);
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-block: 32px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 48px;
+}
+@media (max-width: 900px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; } }
+
+nav.toc {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start;
+  font-size: 14px;
+}
+nav.toc .label {
+  font-family: var(--font-display); text-transform: uppercase; letter-spacing: .08em;
+  color: var(--ink-2); font-weight: 600; margin-bottom: 8px;
+}
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a {
+  display: block; padding: 4px 8px; border-radius: 4px; color: var(--ink); text-decoration: none;
+}
+nav.toc a:hover, nav.toc a:focus-visible { background: var(--floor); outline: none; }
+nav.toc .sub a { padding-left: 22px; color: var(--ink-2); }
+@media (max-width: 900px) {
+  nav.toc { position: static; border: 1px solid var(--rule); border-radius: 6px; padding: 12px; background: var(--sheet); }
+  nav.toc ol { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+}
+
+main { min-width: 0; max-width: 820px; }
+header.title { padding-bottom: 24px; border-bottom: 2px solid var(--ink); margin-bottom: 8px; }
+.eyebrow {
+  font-family: var(--font-mono); font-size: 13px; color: var(--accent); letter-spacing: .04em;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.1; margin: 0; }
+h1 { font-size: clamp(40px, 7vw, 64px); font-weight: 700; letter-spacing: -.01em; margin-top: 6px; }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 62ch; margin: 12px 0 0; }
+
+section { padding-top: 40px; scroll-margin-top: 16px; }
+section > h2 {
+  font-size: 34px; font-weight: 700; display: flex; gap: 12px; align-items: baseline;
+  padding-bottom: 8px; border-bottom: 1px solid var(--rule); margin-bottom: 16px;
+}
+h2 .num { font-family: var(--font-mono); font-size: 16px; color: var(--accent); font-weight: 500; }
+h3 { font-size: 24px; font-weight: 600; margin: 28px 0 8px; }
+p, li { max-width: 68ch; }
+p { margin: 0 0 12px; }
+ol, ul { margin: 0 0 14px; padding-left: 24px; }
+li { margin: 4px 0; }
+li > ol, li > ul { margin: 4px 0; }
+code, .key {
+  font-family: var(--font-mono); font-size: .88em; background: var(--floor);
+  padding: 1px 5px; border-radius: 3px; overflow-wrap: anywhere;
+}
+strong { font-weight: 600; }
+a { color: var(--accent); }
+
+.callout { border-radius: 6px; padding: 12px 16px; margin: 16px 0; max-width: 68ch; }
+.callout p:last-child { margin-bottom: 0; }
+.callout .tag {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; font-size: 15px; display: block; margin-bottom: 2px;
+}
+.warning, .caution { background: var(--warn-bg); color: var(--warn-ink); }
+.note { background: var(--note-bg); }
+
+figure {
+  margin: 20px 0 24px; background: var(--sheet); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 12px;
+}
+figure .draw { overflow-x: auto; }
+figure svg { display: block; width: 100%; min-width: 560px; height: auto; }
+figcaption { font-size: 14px; color: var(--ink-2); margin-top: 8px; max-width: none; }
+figcaption b { color: var(--ink); font-weight: 600; }
+
+.table-wrap { overflow-x: auto; margin: 12px 0 20px; }
+table { border-collapse: collapse; font-size: 14px; min-width: 100%; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th {
+  font-family: var(--font-display); font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+  font-size: 14px; color: var(--ink-2); border-bottom: 2px solid var(--ink);
+}
+table.sheet td { height: 34px; min-width: 70px; }
+
+.routines { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 12px 0 8px; }
+@media (max-width: 640px) { .routines { grid-template-columns: minmax(0, 1fr); } }
+.routine {
+  border: 1px solid var(--rule); border-top: 3px solid var(--accent); border-radius: 4px;
+  padding: 12px 14px; background: var(--sheet); display: grid; gap: 6px; align-content: start;
+}
+.routine .name { font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.routine .what { font-size: 14px; }
+.routine .meas { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); }
+
+.checklist { list-style: none; padding-left: 0; }
+.checklist li { padding-left: 28px; position: relative; }
+.checklist li::before {
+  content: ""; position: absolute; left: 2px; top: 6px; width: 14px; height: 14px;
+  border: 1.5px solid var(--ink-2); border-radius: 2px;
+}
+
+/* SVG drawing styles (all colors from tokens) */
+svg text { font-family: var(--font-body); font-size: 14px; fill: var(--ink); }
+svg .lbl-sm { font-size: 12px; fill: var(--ink-2); }
+svg .lbl-mono { font-family: var(--font-mono); font-size: 12px; fill: var(--ink-2); }
+svg .lbl-strong { font-weight: 600; }
+svg .lbl-accent { fill: var(--accent); font-weight: 600; }
+svg .lbl-laser { fill: var(--laser); font-weight: 600; }
+svg .lbl-head { fill: var(--headset); font-weight: 600; }
+svg .floor { fill: var(--floor); }
+svg .tape { stroke: var(--accent); stroke-width: 4; fill: none; stroke-linecap: round; }
+svg .tape-thin { stroke: var(--accent); stroke-width: 2.5; fill: none; }
+svg .tagplane { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 10 6; fill: none; }
+svg .tagface { stroke: var(--ink); stroke-width: 7; stroke-linecap: square; fill: none; }
+svg .stand { fill: none; stroke: var(--ink-2); stroke-width: 2; }
+svg .standfill { fill: var(--ink-2); }
+svg .mark { fill: var(--ink); }
+svg .whitetape { fill: #ffffff; stroke: var(--ink-2); stroke-width: 1; }
+svg .dot { fill: var(--laser); }
+svg .laser { stroke: var(--laser); stroke-width: 3; stroke-dasharray: 2 5; stroke-linecap: round; fill: none; }
+svg .laser-solid { stroke: var(--laser); stroke-width: 3; fill: none; }
+svg .laserdev { fill: var(--ink); }
+svg .bumper { fill: var(--sheet); stroke: var(--bumper); stroke-width: 7; }
+svg .bumper-thin { fill: var(--sheet); stroke: var(--bumper); stroke-width: 4; }
+svg .ghost { fill: none; stroke: var(--bumper); stroke-width: 3; stroke-dasharray: 6 5; opacity: .55; }
+svg .headset { fill: var(--headset); }
+svg .front { stroke: var(--ink); stroke-width: 2; fill: none; }
+svg .dim { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+svg .ext { stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 3 3; fill: none; }
+svg .path { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 7 5; fill: none; }
+svg .ray { stroke: var(--headset); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+svg .ray0 { stroke: var(--headset); stroke-width: 2.5; fill: none; }
+svg .orbit { stroke: var(--headset); stroke-width: 1.5; stroke-dasharray: 3 4; fill: none; }
+svg .arrowhead { fill: var(--ink-2); }
+svg .arrowhead-ink { fill: var(--ink); }
+svg .arrowhead-head { fill: var(--headset); }
+svg .arrowhead-acc { fill: var(--accent); }
+svg .markdot { fill: var(--sheet); stroke: var(--ink); stroke-width: 2; }
+svg .markdot-txt { font-family: var(--font-mono); font-size: 13px; font-weight: 500; text-anchor: middle; fill: var(--ink); }
+svg .axis { stroke: var(--ink); stroke-width: 2; fill: none; }
+svg .bob { fill: var(--ink); }
+svg .string { stroke: var(--ink-2); stroke-width: 1.2; fill: none; }
+svg .tri { fill: var(--accent); opacity: .12; stroke: none; }
+svg .tri-edge { stroke: var(--accent); stroke-width: 2; fill: none; }
+svg .tri-hyp { stroke: var(--ink); stroke-width: 2; stroke-dasharray: 8 5; fill: none; }
+
+
+.incode {
+  border-left: 3px solid var(--headset); background: var(--sheet); padding: 10px 16px; margin: 14px 0 18px;
+  max-width: 68ch; border-radius: 0 4px 4px 0;
+}
+.incode .tag {
+  font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 14px; color: var(--headset); display: block;
+}
+.incode ul { margin: 4px 0 0; }
+.incode li { font-size: 15px; }
+.eq {
+  font-family: var(--font-mono); font-size: 15px; background: var(--floor); border-radius: 4px;
+  padding: 10px 14px; margin: 8px 0 14px; overflow-x: auto; line-height: 1.8; max-width: 68ch;
+}
+var { font-style: italic; font-family: var(--font-body); }
+p.worked { border: 1px dashed var(--rule); border-radius: 4px; padding: 10px 14px; font-size: 15px; font-variant-numeric: tabular-nums; }
+p.small-note { font-size: 14px; color: var(--ink-2); }
+svg .field-edge { stroke: var(--ink-2); stroke-width: 2; }
+svg .wall-blue { stroke: var(--blue); stroke-width: 6; }
+svg .wall-red { stroke: var(--bumper); stroke-width: 6; }
+svg .hub { fill: var(--sheet); stroke: var(--ink-2); stroke-width: 1.5; }
+svg .frame { fill: var(--sheet); stroke: var(--ink-2); stroke-width: 1.5; }
+svg .feat-far { fill: var(--ink); }
+svg .feat-near { fill: var(--accent); }
+svg .feat-ghost { fill: none; stroke: var(--ink-2); stroke-width: 1; stroke-dasharray: 2 2; }
+svg .axis-vio { stroke: var(--headset); stroke-width: 2; fill: none; }
+svg .tagimg { fill: var(--ink); }
+svg .tagimg-in { fill: var(--sheet); }
+svg .grid line { stroke: var(--rule); stroke-width: 1; }
+svg .axis-thin { stroke: var(--ink-2); stroke-width: 1.5; fill: none; }
+svg .series-vio { stroke: var(--ink-2); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+svg .series-tag { stroke: var(--headset); stroke-width: 2; fill: none; stroke-linejoin: round; }
+svg .corr-dot circle { fill: var(--headset); stroke: var(--floor); stroke-width: 2; }
+svg .panel { fill: none; stroke: var(--rule); stroke-width: 1.5; }
+svg .box rect { fill: var(--sheet); stroke: var(--ink-2); stroke-width: 1.5; }
+svg .box-key rect { fill: var(--sheet); stroke: var(--headset); stroke-width: 2.5; }
+
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<!-- Shared arrow markers for all drawings -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead"/>
+    </marker>
+    <marker id="arr-ink" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead-ink"/>
+    </marker>
+    <marker id="arr-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead-head"/>
+    </marker>
+    <marker id="arr-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" class="arrowhead-acc"/>
+    </marker>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <nav class="toc" aria-label="Contents">
+    <div class="label">Contents</div>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#how-it-works">0. How QuestNav works</a></li>
+      <li><a href="#safety">Safety and equipment</a></li>
+      <li><a href="#floor">1. Floor setup</a></li>
+      <li><a href="#laser">2. Laser measure</a></li>
+      <li><a href="#calibration">3. Offset calibration</a></li>
+      <li><a href="#routines">4. Test routines</a></li>
+      <li class="sub"><a href="#turn-sweep">Turn Sweep</a></li>
+      <li class="sub"><a href="#drift-loop">Drift Loop</a></li>
+      <li class="sub"><a href="#stop-at-marks">Stop At Marks</a></li>
+      <li><a href="#data">5. Data and settings</a></li>
+      <li><a href="#sheets">6. Record sheets</a></li>
+      <li><a href="#appendix">A. Appendix: the math</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="title">
+      <div class="eyebrow">FRC 5010 · QuestNav · Tag 25</div>
+      <h1>QuestNav Test Guide</h1>
+      <p class="lede">How to set up the test area, measure the robot with the laser measure, calibrate the headset, and run the three test routines that measure how accurate and repeatable QuestNav is.</p>
+    </header>
+
+    <!-- ============================================================ OVERVIEW -->
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>The tests use an AprilTag stand that stands in for the tags on the 2026 field. When the headset reads the tags, it aligns its pose to field coordinates.</p>
+      <div class="callout warning">
+        <span class="tag">Important</span>
+        <p>The QuestNav beta documents that it needs 2 tags in view at the same time to align to the field, and 3 for later corrections. With only tag 25, the headset possibly never aligns. Read <a href="#one-tag">One tag is possibly not enough</a> before you trust a tag-based result.</p>
+      </div>
+      <p>Do the work in this order:</p>
+      <ol start="0">
+        <li><a href="#how-it-works">How QuestNav works</a>: background reading.</li>
+        <li><a href="#floor">Floor setup</a>: one time for each test area.</li>
+        <li><a href="#laser">Laser measure</a>: how to measure the robot at a mark.</li>
+        <li><a href="#calibration">Offset calibration</a>: find where the headset is on the robot.</li>
+        <li><a href="#routines">Test routines</a>: measure accuracy, drift and repeatability.</li>
+      </ol>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 330" role="img" aria-labelledby="f1t">
+          <title id="f1t">Plan view of the test area: tag stand on the left, centerline with cross lines at 1 to 4 meters, the robot at the 2 meter mark with its headset side facing the tag.</title>
+          <rect class="floor" x="0" y="0" width="760" height="330" rx="4"/>
+          <!-- tag plane line and centerline -->
+          <line class="tagplane" x1="70" y1="24" x2="70" y2="290"/>
+          <line class="tape" x1="70" y1="160" x2="690" y2="160"/>
+          <!-- cross lines 1..4 m (100 px per m) -->
+          <g class="tape-thin">
+            <line x1="170" y1="140" x2="170" y2="180"/><line x1="270" y1="140" x2="270" y2="180"/>
+            <line x1="370" y1="140" x2="370" y2="180"/><line x1="470" y1="140" x2="470" y2="180"/>
+          </g>
+          <g class="lbl-mono" text-anchor="middle">
+            <text x="170" y="200">1 m</text><text x="370" y="200">3 m</text><text x="470" y="200">4 m</text>
+          </g>
+          <!-- stand: cross base + tag edge-on -->
+          <g>
+            <line class="stand" x1="40" y1="160" x2="62" y2="160"/>
+            <line class="stand" x1="52" y1="120" x2="52" y2="200"/>
+            <rect class="standfill" x="46" y="154" width="12" height="12"/>
+            <line class="tagface" x1="63" y1="128" x2="63" y2="192"/>
+          </g>
+          <circle class="mark" cx="70" cy="160" r="5"/>
+          <text x="80" y="118" class="lbl-strong">Tag 25</text>
+          <text x="80" y="236" class="lbl-sm">Floor mark (below tag center)</text>
+          <line class="ext" x1="74" y1="166" x2="96" y2="222"/>
+          <text x="80" y="20" class="lbl-sm">Tag plane line</text>
+          <!-- robot at 2 m: 0.88 m bumpers = 88 px; headset (right side) faces tag -->
+          <rect class="bumper" x="226" y="116" width="88" height="88" rx="6"/>
+          <rect class="headset" x="231" y="148" width="12" height="24" rx="2"/>
+          <path class="front" d="M270 172 L270 196" marker-end="url(#arr-ink)"/>
+          <text x="270" y="232" text-anchor="middle" class="lbl-mono">2 m</text>
+          <text x="320" y="104" class="lbl-sm">Robot at the 2 m mark</text>
+          <text x="244" y="108" class="lbl-head" text-anchor="end">Headset</text>
+          <line class="ext" x1="238" y1="112" x2="237" y2="146"/>
+          <text x="282" y="190" class="lbl-sm">front</text>
+          <!-- tag frame legend -->
+          <g transform="translate(560 270)">
+            <line class="axis" x1="0" y1="0" x2="60" y2="0" marker-end="url(#arr-ink)"/>
+            <line class="axis" x1="0" y1="0" x2="0" y2="-60" marker-end="url(#arr-ink)"/>
+            <text x="66" y="5" class="lbl-strong">+X</text>
+            <text x="-8" y="-68" class="lbl-strong">+Y</text>
+            <text x="10" y="22" class="lbl-sm">Tag frame</text>
+          </g>
+          <text x="520" y="70" class="lbl-sm">+X: straight out from the tag face</text>
+          <text x="520" y="90" class="lbl-sm">+Y: your right as you face the tag</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 1. The test area, seen from above.</b> All drawings in this guide show the tag on the left. The headset faces the right side of the robot, so the robot turns its right side to the tag when the headset must see the tag.</figcaption>
+      </figure>
+
+      <div class="routines">
+        <div class="routine"><span class="name">Turn Sweep</span><span class="what">Turns in place through ±60°. Shows position and heading error.</span><span class="meas">No measuring</span></div>
+        <div class="routine"><span class="name">Drift Loop</span><span class="what">Drives with the tag out of view, then looks at the tag. Shows drift.</span><span class="meas">No measuring</span></div>
+        <div class="routine"><span class="name">Stop At Marks</span><span class="what">Stops at 6 marks in front of the tag. Shows accuracy.</span><span class="meas">Tape measure at each mark</span></div>
+      </div>
+    </section>
+
+    <!-- ============================================================ BACKGROUND -->
+    <section id="how-it-works">
+      <h2><span class="num">0</span>How QuestNav works</h2>
+      <p>Read this section before you do the tests. It explains what the headset measures, why it drifts, and how AprilTags fix that. You do not need to know any of it already. Words in <strong>bold</strong> are terms that the rest of this guide uses.</p>
+      <p>The <a href="#appendix">appendix</a> has the same ideas with more math, for students who want it.</p>
+
+      <h3 id="bg-pose">What "pose" means</h3>
+      <p>To drive an auto, the robot must know where it is on the field. Three numbers describe that:</p>
+      <ul>
+        <li><strong>x</strong>: how far the robot is along the length of the field, in meters.</li>
+        <li><strong>y</strong>: how far the robot is across the width of the field, in meters.</li>
+        <li><strong>θ (theta), the heading</strong>: which way the front of the robot points, in degrees.</li>
+      </ul>
+      <p>Together these three numbers are the robot's <strong>pose</strong>. A pose only means something if you know where the zero point is and which way the axes point. That set of rules is a <strong>coordinate frame</strong>. This guide uses the WPILib 2027 <strong>field frame</strong> in Figure B1:</p>
+      <ul>
+        <li>The origin (0, 0) is the <strong>center of the field</strong>, where the long centerline crosses the midfield line.</li>
+        <li><strong>+X</strong> points toward the <strong>blue</strong> alliance wall. The blue half of the field has positive x. The red half has negative x.</li>
+        <li><strong>+Y</strong> points 90° counter-clockwise from +X, seen from above. For a driver at the blue wall, that is to the right.</li>
+        <li>A heading of 0° points toward the blue wall. Heading increases counter-clockwise.</li>
+      </ul>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 420" role="img" aria-labelledby="b1t">
+          <title id="b1t">The 2027 FRC field frame. The origin (0, 0) is the center of the field. +X points toward the blue alliance wall, on the right. +Y points up in the picture. Heading is measured counter-clockwise from +X. Tag 25 is on the blue hub at x 4.25, y −0.36 and faces +X, toward the blue wall. Tag 26 is next to it on the centerline at x 4.25, y 0.00.</title>
+          <rect class="floor" x="0" y="0" width="760" height="420" rx="4"/>
+          <!-- field 16.541 x 8.069 m at 40 px per m; origin at the field center (390.8, 208.6); px = 390.8 + 40x, py = 208.6 - 40y -->
+          <rect x="60" y="47.2" width="661.6" height="322.8" fill="none" class="field-edge"/>
+          <line x1="60" y1="47.2" x2="60" y2="370" class="wall-red"/>
+          <line x1="721.6" y1="47.2" x2="721.6" y2="370" class="wall-blue"/>
+          <text x="30" y="210" class="lbl-strong" transform="rotate(-90 30 210)" text-anchor="middle">Red alliance wall</text>
+          <text x="744" y="210" class="lbl-strong" transform="rotate(90 744 210)" text-anchor="middle">Blue alliance wall</text>
+          <!-- centerlines -->
+          <line class="ext" x1="390.8" y1="47.2" x2="390.8" y2="370"/>
+          <line class="ext" x1="60" y1="208.6" x2="721.6" y2="208.6"/>
+          <!-- blue hub: x 3.04..4.25, y -0.60..0.60 -->
+          <rect x="512.4" y="184.6" width="48.3" height="48.3" class="hub"/>
+          <text x="536.6" y="250" class="lbl-sm" text-anchor="middle">Blue hub</text>
+          <!-- tags 25 and 26 on the hub face toward the blue wall -->
+          <line class="tagface" x1="562.5" y1="219.3" x2="562.5" y2="226.3" stroke-width="5"/>
+          <line class="tagface" x1="562.5" y1="205.1" x2="562.5" y2="212.1" stroke-width="5"/>
+          <path class="ray0" d="M567 222.8 L589 222.8" marker-end="url(#arr-head)"/>
+          <text x="712" y="270" class="lbl-strong" text-anchor="end">Tag 25 (4.25, −0.36)</text>
+          <text x="712" y="286" class="lbl-sm" text-anchor="end">faces +X, toward the blue wall</text>
+          <text x="712" y="176" class="lbl-sm" text-anchor="end">Tag 26 (4.25, 0.00)</text>
+          <!-- origin and axes -->
+          <circle class="mark" cx="390.8" cy="208.6" r="6"/>
+          <line class="axis" x1="390.8" y1="208.6" x2="470" y2="208.6" marker-end="url(#arr-ink)"/>
+          <line class="axis" x1="390.8" y1="208.6" x2="390.8" y2="118" marker-end="url(#arr-ink)"/>
+          <text x="462" y="196" class="lbl-strong">+X</text>
+          <text x="399" y="118" class="lbl-strong">+Y</text>
+          <text x="382" y="232" class="lbl-sm" text-anchor="end">(0, 0): center of the field</text>
+          <!-- example robot heading 30 deg -->
+          <g transform="translate(180 300)">
+            <g transform="rotate(-30)">
+              <rect class="bumper-thin" x="-18" y="-18" width="36" height="36" rx="3"/>
+              <path class="front" d="M0 0 L34 0" marker-end="url(#arr-ink)"/>
+            </g>
+            <line class="ext" x1="0" y1="0" x2="60" y2="0"/>
+            <path class="dim" d="M48 0 A48 48 0 0 0 41.6 -24"/>
+            <text x="56" y="-10" class="lbl-strong">θ</text>
+          </g>
+          <text x="210" y="340" class="lbl-sm">Robot pose: (x, y, θ)</text>
+          <text x="210" y="356" class="lbl-sm">θ counts up counter-clockwise from +X</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure B1. The 2027 field frame, seen from above.</b> The picture is turned so that +X points right, so the blue wall is on the right. Tag positions come from WPILib's 2026 field layout file, converted to the 2027 frame.</figcaption>
+      </figure>
+
+      <div class="callout note" id="frame-2026">
+        <p><strong>Our code and the dashboard still use the 2026 frame.</strong> The robot code is on WPILib 2026, and the QuestNav beta uses the 2026 field layout. In the 2026 frame, the origin is the blue alliance corner, +X points toward the red wall, and a heading of 0° points toward the red wall. Every pose on the dashboard, in the snapshots and in the <code>.wpilog</code> is a 2026 pose until the team moves to WPILib 2027.</p>
+        <p>To change a 2026 pose to a 2027 pose (field 16.541 m × 8.069 m):</p>
+        <div class="eq">x<sub>2027</sub> = 8.271 − x<sub>2026</sub><br>y<sub>2027</sub> = 4.035 − y<sub>2026</sub><br>θ<sub>2027</sub> = θ<sub>2026</sub> + 180°</div>
+        <p>Example: tag 25 is at (4.02, 4.39), facing 180°, in the 2026 frame. In the 2027 frame it is at (4.25, −0.36), facing 0°. The same equations change a 2027 pose back to a 2026 pose. Distances, the tag-frame values and the test results do not change, because they do not depend on the field origin.</p>
+      </div>
+
+      <h3 id="bg-sensors">Part 1: Tracking with only the headset's own sensors</h3>
+      <p>A Meta Quest headset was made for virtual reality. To draw a game world that does not swim when you move your head, it must know exactly how your head moves. QuestNav uses the same tracking to follow the robot. The headset has two kinds of sensors for this.</p>
+
+      <p><strong>1. The IMU (inertial measurement unit).</strong> It has two parts:</p>
+      <ul>
+        <li>A <strong>gyroscope</strong> measures how fast the headset turns.</li>
+        <li>An <strong>accelerometer</strong> measures how fast the speed changes (acceleration).</li>
+      </ul>
+      <p>The IMU is very fast: it gives hundreds of readings each second. But it cannot measure position directly. To get position from acceleration, the software adds up the acceleration to get speed, and then adds up the speed to get position. Each small error in the acceleration is added up two times, so the position error grows very quickly. A tiny error of 0.01 m/s² becomes 0.5 m of position error after only 10 seconds. An IMU alone is useless for position after a few seconds.</p>
+
+      <p><strong>2. The tracking cameras.</strong> The headset has several wide-angle cameras that look at the room. The software finds <strong>features</strong> in each picture: corners, edges and spots of texture, like a locker vent or a pattern in the carpet. When the headset moves, the features move in the picture. Near features move more than far features (Figure B2). From how the features move, the software calculates how the headset moved.</p>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 270" role="img" aria-labelledby="b2t">
+          <title id="b2t">Two camera pictures, before and after the headset moves 10 centimeters to the right. Features in the picture move left. A near feature moves a lot; far features move a little.</title>
+          <rect class="floor" x="0" y="0" width="760" height="270" rx="4"/>
+          <text x="40" y="30" class="lbl-strong">Picture 1</text>
+          <text x="420" y="30" class="lbl-strong">Picture 2: headset moved 10 cm right</text>
+          <rect x="40" y="40" width="300" height="190" class="frame"/>
+          <rect x="420" y="40" width="300" height="190" class="frame"/>
+          <!-- picture 1 features -->
+          <g>
+            <circle cx="110" cy="90" r="5" class="feat-far"/><circle cx="170" cy="80" r="5" class="feat-far"/>
+            <circle cx="250" cy="100" r="5" class="feat-far"/><circle cx="210" cy="150" r="5" class="feat-far"/>
+            <circle cx="160" cy="185" r="11" class="feat-near"/>
+          </g>
+          <!-- picture 2: far features moved 10 px left, near feature 55 px left; ghosts show old place -->
+          <g>
+            <circle cx="490" cy="90" r="5" class="feat-ghost"/><circle cx="550" cy="80" r="5" class="feat-ghost"/>
+            <circle cx="630" cy="100" r="5" class="feat-ghost"/><circle cx="590" cy="150" r="5" class="feat-ghost"/>
+            <circle cx="540" cy="185" r="11" class="feat-ghost"/>
+            <circle cx="480" cy="90" r="5" class="feat-far"/><circle cx="540" cy="80" r="5" class="feat-far"/>
+            <circle cx="620" cy="100" r="5" class="feat-far"/><circle cx="580" cy="150" r="5" class="feat-far"/>
+            <circle cx="485" cy="185" r="11" class="feat-near"/>
+            <path class="dim" d="M528 185 L499 185" marker-end="url(#arr)"/>
+          </g>
+          <text x="40" y="254" class="lbl-sm">Small dots: far features (lockers at the end of the hall). Large dot: a near feature (a chair).</text>
+          <text x="560" y="214" class="lbl-sm">Near: moves 55 px</text>
+          <text x="600" y="140" class="lbl-sm">Far: moves 10 px</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure B2. How the cameras see motion.</b> When the headset moves right, everything in the picture moves left. The amount each feature moves also tells the software how far away it is.</figcaption>
+      </figure>
+
+      <p><strong>Together: visual-inertial odometry (VIO).</strong> "Odometry" means measuring how far you have moved. The headset combines the two sensors because each one covers the other's weakness:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th></th><th>IMU</th><th>Cameras</th></tr></thead>
+        <tbody>
+          <tr><td>Speed</td><td>Very fast</td><td>Slower</td></tr>
+          <tr><td>Good at</td><td>Quick, sudden motion</td><td>Staying correct over time</td></tr>
+          <tr><td>Bad at</td><td>Drifts in seconds</td><td>Blurry pictures, blank walls, the dark</td></tr>
+        </tbody>
+      </table></div>
+      <p>The result is a smooth, accurate pose, 120 times each second. Think of walking down a hallway. With your eyes closed you can still feel your steps (the IMU), but after 20 steps you are not sure where you are. With your eyes open, you can see the lockers go past (the cameras), and you stay on track.</p>
+
+      <h3 id="bg-origin">Where is zero?</h3>
+      <p>VIO measures <em>movement</em>. It does not know where it is on the field. When tracking starts, the headset uses the point where it is at that moment as its zero point, and the direction it faces as its axes. This is the <strong>VIO frame</strong>. The QuestNav docs say it plainly: the origin is wherever the headset was when tracking started, and it is not related to the field.</p>
+      <p>So the same spot in the room can have completely different numbers, depending on where the headset woke up (Figure B3).</p>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 290" role="img" aria-labelledby="b3t">
+          <title id="b3t">Two cases with the same robot path from A to B, 2 meters to the east. In case 1, tracking started at A facing east, so B is (2.0, 0.0). In case 2, tracking started at C, 1 meter south of A, facing north, so B is (1.0, minus 2.0).</title>
+          <rect class="floor" x="0" y="0" width="760" height="290" rx="4"/>
+          <text x="30" y="34" class="lbl-strong">Case 1: tracking started at A, facing east</text>
+          <text x="400" y="34" class="lbl-strong">Case 2: tracking started at C, facing north</text>
+          <line x1="380" y1="20" x2="380" y2="270" class="ext"/>
+          <!-- case 1: 70 px per m -->
+          <path class="path" d="M100 170 L232 170" marker-end="url(#arr-ink)"/>
+          <circle class="markdot" cx="100" cy="170" r="7"/><text x="100" y="200" class="lbl-strong" text-anchor="middle">A</text>
+          <circle class="markdot" cx="240" cy="170" r="7"/><text x="240" y="200" class="lbl-strong" text-anchor="middle">B</text>
+          <line class="axis-vio" x1="100" y1="170" x2="160" y2="170" marker-end="url(#arr-head)"/>
+          <line class="axis-vio" x1="100" y1="170" x2="100" y2="110" marker-end="url(#arr-head)"/>
+          <text x="164" y="160" class="lbl-head">+X</text><text x="88" y="102" class="lbl-head">+Y</text>
+          <text x="230" y="140" class="lbl-mono">B = (2.0, 0.0)</text>
+          <text x="40" y="250" class="lbl-sm">Zero is at A.</text>
+          <!-- case 2 -->
+          <path class="path" d="M470 150 L602 150" marker-end="url(#arr-ink)"/>
+          <circle class="markdot" cx="470" cy="150" r="7"/><text x="452" y="146" class="lbl-strong" text-anchor="middle">A</text>
+          <circle class="markdot" cx="610" cy="150" r="7"/><text x="610" y="180" class="lbl-strong" text-anchor="middle">B</text>
+          <circle class="mark" cx="470" cy="220" r="6"/><text x="452" y="226" class="lbl-strong" text-anchor="middle">C</text>
+          <line class="axis-vio" x1="470" y1="220" x2="470" y2="166" marker-end="url(#arr-head)"/>
+          <line class="axis-vio" x1="470" y1="220" x2="416" y2="220" marker-end="url(#arr-head)"/>
+          <text x="478" y="176" class="lbl-head">+X</text><text x="402" y="212" class="lbl-head">+Y</text>
+          <text x="600" y="126" class="lbl-mono">B = (1.0, −2.0)</text>
+          <text x="410" y="262" class="lbl-sm">Same B, different numbers.</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure B3. The origin problem.</b> The robot drives the same 2 m path in both cases. Only the place where tracking started is different.</figcaption>
+      </figure>
+
+      <p>Before the robot can use the headset for an auto, something must connect the VIO frame to the field frame. Without AprilTags, the only way is to <strong>tell</strong> the robot where it starts: put the robot on a known spot (for example, against the alliance wall at a marked position) and reset the pose to that spot. After that, VIO measures all movement from there.</p>
+      <div class="incode"><span class="tag">In our code</span>
+        <ul>
+          <li><code>drivetrain.resetPose(...)</code> sets the drivetrain pose. BLine autos call it at the start of a path (<code>.withPoseReset(...)</code> in <code>RobotContainer</code>).</li>
+          <li><code>QuestNavSubsystem.softReset(...)</code> remembers an offset in code instead of sending a reset to the headset. Only the offset calibration uses it now.</li>
+          <li>The QuestNav library also has <code>questNav.setPose(...)</code>, which sends a reset to the headset.</li>
+        </ul>
+      </div>
+
+      <h3 id="bg-drift">Drift</h3>
+      <p>VIO is very good, but it is not perfect. Each small step has a tiny error, and the errors add up. This slow growth of error is <strong>drift</strong>.</p>
+      <p>Heading errors are the worst kind. If the heading is wrong by only 1°, every meter you drive is in a slightly wrong direction. After 5 m of driving, you are about 9 cm to the side of where you think you are. After a full match, the errors can be much larger.</p>
+      <p>Some things make the tracking worse:</p>
+      <ul>
+        <li><strong>Few features:</strong> blank walls, a bare floor, or a dark room.</li>
+        <li><strong>Repeating patterns:</strong> a row of identical lockers can look the same from different places.</li>
+        <li><strong>Things that move:</strong> people walking past, other robots. The software can think that the room moved.</li>
+        <li><strong>Fast motion:</strong> sudden spins and hits blur the pictures.</li>
+        <li><strong>Covered cameras:</strong> if the cameras cannot see, tracking stops. The dashboard shows <code>QuestNav/Tracking</code> as false, and <code>QuestNav/TrackingLostCount</code> goes up.</li>
+      </ul>
+
+      <h3 id="bg-mount">From the headset to the robot</h3>
+      <p>The headset tracks <em>itself</em>, not the robot. The headset is on the side of the robot, not at the center. When the robot spins in place, the center stays still, but the headset moves in a circle. To get the robot's pose, the code needs to know exactly where the headset is on the robot and which way it faces. That is the <strong>mount transform</strong>.</p>
+      <p>A small mistake in the mount transform makes a large error when the robot turns. If the headset is 0.30 m from the center and the robot turns 90°, the headset moves 0.42 m. If the code thinks the headset is at the center, it thinks that the robot moved 0.42 m. This is why the <a href="#calibration">offset calibration</a> is the first test.</p>
+      <div class="incode"><span class="tag">In our code</span>
+        <ul>
+          <li><code>ROBOT_TO_QUEST</code> in <code>QuestNavSubsystem</code> is the mount transform: x, y, z in meters and the rotation of the headset.</li>
+          <li><code>periodic()</code> calculates <code>robotPose = questPose.transformBy(ROBOT_TO_QUEST.inverse())</code>: start at the headset, then move back to the robot center.</li>
+        </ul>
+      </div>
+
+      <h3 id="bg-fusion">How the robot uses the headset</h3>
+      <p>The robot does not use the headset alone. It also has wheel encoders and a gyro. A <strong>pose estimator</strong> combines all of them. Each source has a <strong>standard deviation</strong>: a number that says how much to trust it. A small number means "trust this a lot".</p>
+      <div class="incode"><span class="tag">In our code</span>
+        <ul>
+          <li><code>drivetrain.addVisionMeasurement(pose, timestamp, QUESTNAV_STD_DEVS)</code> gives each headset pose to the estimator.</li>
+          <li><code>QUESTNAV_STD_DEVS</code> is 0.02 m for x and y and about 5° for heading. 0.02 m is very small, so the robot trusts the headset position much more than the wheels.</li>
+          <li>The <code>timestamp</code> tells the estimator when the headset measured the pose, so a late message is applied at the correct time.</li>
+        </ul>
+      </div>
+
+      <h3 id="bg-tags">Part 2: Adding AprilTags</h3>
+      <p>An <strong>AprilTag</strong> is a black and white square code, a little like a QR code, but simpler and easier to read from far away. FRC uses the <strong>36h11</strong> family. Each tag has an ID number. The <strong>field layout</strong> file lists the exact position, height and facing direction of every tag on the field. The 2026 tags are 16.51 cm (6.5 in) wide.</p>
+      <p>This changes everything. A tag is a <strong>known location</strong>. If the headset can see a tag and calculate where it is relative to the tag, it knows where it is on the field. The origin problem goes away.</p>
+
+      <h3 id="bg-pnp">How one picture gives a position</h3>
+      <p>The software knows where the four corners of each tag are in the field. It finds the four corners in the camera picture. Then it calculates the one camera position and direction that makes the real corners land at those places in the picture. This calculation is called <strong>PnP</strong> (perspective-n-point).</p>
+      <p>The idea is simple:</p>
+      <ul>
+        <li>A tag that looks <strong>big</strong> is close. A tag that looks <strong>small</strong> is far away.</li>
+        <li>A tag that looks <strong>squashed</strong> is seen from an angle. The shape tells the software the angle.</li>
+        <li>Where the tag is in the picture (left, right, up, down) tells the software which way the camera points.</li>
+      </ul>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 280" role="img" aria-labelledby="b4t">
+          <title id="b4t">Left: from above, a camera sees a near tag and a far tag of the same size. The near tag fills a wide angle; the far tag fills a narrow angle. Right: in the camera picture the near tag is big, the far tag is small, and a tag seen from an angle looks squashed.</title>
+          <rect class="floor" x="0" y="0" width="760" height="280" rx="4"/>
+          <text x="30" y="30" class="lbl-strong">Seen from above</text>
+          <!-- camera -->
+          <rect class="laserdev" x="40" y="128" width="26" height="24" rx="3"/>
+          <text x="30" y="176" class="lbl-sm">Camera</text>
+          <!-- near tag at x=180, length 50 (y 115..165); far at x=400 -->
+          <line class="tagface" x1="180" y1="90" x2="180" y2="140"/>
+          <line class="tagface" x1="400" y1="160" x2="400" y2="210"/>
+          <g class="ray">
+            <line x1="66" y1="140" x2="180" y2="90"/><line x1="66" y1="140" x2="180" y2="140"/>
+            <line x1="66" y1="140" x2="400" y2="160"/><line x1="66" y1="140" x2="400" y2="210"/>
+          </g>
+          <text x="190" y="104" class="lbl-sm">Near tag: wide angle</text>
+          <text x="410" y="190" class="lbl-sm">Far tag: narrow angle</text>
+          <!-- picture -->
+          <text x="520" y="30" class="lbl-strong">What the camera sees</text>
+          <rect x="520" y="40" width="220" height="190" class="frame"/>
+          <rect x="548" y="70" width="70" height="70" class="tagimg"/>
+          <rect x="560" y="82" width="46" height="46" class="tagimg-in"/>
+          <rect x="660" y="160" width="26" height="26" class="tagimg"/>
+          <rect x="665" y="165" width="16" height="16" class="tagimg-in"/>
+          <path d="M640 70 L700 80 L700 128 L640 138 z" class="tagimg"/>
+          <text x="548" y="160" class="lbl-sm">big = close</text>
+          <text x="634" y="214" class="lbl-sm">small = far</text>
+          <text x="630" y="60" class="lbl-sm">squashed = angle</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure B4. Size and shape in the picture give distance and angle.</b> Both tags are the same real size.</figcaption>
+      </figure>
+
+      <p>Far tags give worse answers. At 5 m, the whole tag is only a few dozen pixels wide. If a corner is found one pixel wrong, the distance can be wrong by many centimeters. More tags in the same picture help, because the errors partly cancel. QuestNav uses this: it trusts a measurement less when the tags are far away and more when it sees several tags.</p>
+
+      <h3 id="bg-anchor">How QuestNav anchors to the field</h3>
+      <p>QuestNav does not throw away VIO when it sees tags. VIO is still the main source: it is smooth and fast (120 times each second). Tags (about 30 times each second) correct it. The headset combines the two with a <strong>Kalman filter</strong>: a method that keeps a best guess and a "how sure am I" number, and blends in each new measurement by how much it trusts it.</p>
+      <p>The QuestNav docs describe two phases:</p>
+      <ol>
+        <li><strong>Phase 1: alignment (one time).</strong> The first good tag view sets the field frame. QuestNav jumps the position to the tag answer and calculates a <strong>heading offset</strong>: the angle between the VIO frame and the field frame. From then on, the VIO movement is turned by that angle so that it is in field coordinates. The heading offset is then <strong>locked</strong>.</li>
+        <li><strong>Phase 2: corrections (all the time).</strong> Each later tag view that passes the checks gently pulls the <em>position</em> toward the tag answer. Close, multi-tag views pull hard. Far, single views pull a little. Heading is not corrected again.</li>
+      </ol>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 330" role="img" aria-labelledby="b5t">
+          <title id="b5t">Illustration with made-up numbers. Position error over 60 seconds. With VIO only, the error grows steadily to about 0.29 meters. With tag corrections at 15, 30 and 45 seconds, the error drops back to about 0.02 meters each time and stays below about 0.07 meters.</title>
+          <rect class="floor" x="0" y="0" width="760" height="330" rx="4"/>
+          <!-- plot area x 80..700 (t 0..60), y 260..40 (0..0.30 m) -->
+          <g class="grid">
+            <line x1="80" y1="186.7" x2="700" y2="186.7"/>
+            <line x1="80" y1="113.3" x2="700" y2="113.3"/>
+            <line x1="80" y1="40" x2="700" y2="40"/>
+          </g>
+          <line x1="80" y1="260" x2="700" y2="260" class="axis-thin"/>
+          <line x1="80" y1="260" x2="80" y2="40" class="axis-thin"/>
+          <g class="lbl-mono" text-anchor="end">
+            <text x="72" y="264">0</text><text x="72" y="191">0.1</text><text x="72" y="118">0.2</text><text x="72" y="44">0.3</text>
+          </g>
+          <g class="lbl-mono" text-anchor="middle">
+            <text x="80" y="280">0</text><text x="235" y="280">15</text><text x="390" y="280">30</text><text x="545" y="280">45</text><text x="700" y="280">60</text>
+          </g>
+          <text x="390" y="304" class="lbl-sm" text-anchor="middle">Time driving (s)</text>
+          <text x="20" y="150" class="lbl-sm" transform="rotate(-90 20 150)" text-anchor="middle">Position error (m)</text>
+          <!-- VIO only -->
+          <polyline class="series-vio" points="80,260 183.3,238.7 286.7,211.6 390,178.6 493.3,139.8 596.7,95.1 700,44.5"/>
+          <!-- with tags -->
+          <polyline class="series-tag" points="80,260 235,225.9 235,245.3 390,206.9 390,245.3 545,206.9 545,245.3 700,206.9"/>
+          <g class="corr-dot">
+            <circle cx="235" cy="245.3" r="4.5"/><circle cx="390" cy="245.3" r="4.5"/><circle cx="545" cy="245.3" r="4.5"/>
+          </g>
+          <!-- direct labels -->
+          <text x="610" y="66" class="lbl-sm lbl-strong">VIO only</text>
+          <text x="560" y="196" class="lbl-sm lbl-strong">With tag corrections</text>
+          <text x="245" y="258" class="lbl-sm">tag seen</text>
+          <!-- legend -->
+          <g transform="translate(100 18)">
+            <line x1="0" y1="0" x2="26" y2="0" class="series-vio"/><text x="32" y="4" class="lbl-sm">VIO only</text>
+            <line x1="120" y1="0" x2="146" y2="0" class="series-tag"/><text x="152" y="4" class="lbl-sm">With tag corrections</text>
+            <text x="330" y="4" class="lbl-sm">Illustration only: made-up numbers</text>
+          </g>
+        </svg>
+        </div>
+        <figcaption><b>Figure B5. What tag corrections do to drift (illustration).</b> Between tag views, the error grows like VIO alone. Each good tag view pulls it back. The real numbers for our robot come from the Drift Loop test.</figcaption>
+      </figure>
+
+      <p><strong>The checks.</strong> A tag view is only used if it passes these checks. These are the values in the QuestNav docs for the 2026-3.0.0-beta release:</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Check</th><th>Phase 1: alignment</th><th>Phase 2: corrections</th></tr></thead>
+        <tbody>
+          <tr><td>Tags in the same picture</td><td>2 or more</td><td>3 or more</td></tr>
+          <tr><td>Inlier ratio (how many corners agree with the answer)</td><td>60% or more</td><td>80% or more</td></tr>
+          <tr><td>Jump from the current position</td><td>Any</td><td>Less than 2.0 m</td></tr>
+          <tr><td>What it changes</td><td>Position and heading</td><td>Position only</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="callout warning" id="one-tag">
+        <span class="tag">Important: one tag is possibly not enough</span>
+        <p>By these documented rules, a view with only one tag fails both phases. With only tag 25 on the stand, the headset possibly never aligns to the field, and its pose stays in the VIO frame. Then <code>questnav/Distance To Target Tag</code> is a number in the wrong frame, even when it looks reasonable.</p>
+        <p>Do one of these before you trust any tag-based result:</p>
+        <ul>
+          <li><strong>Add tag 26</strong> to the stand. On the real field it is on the same hub face as tag 25: same height (1.124 m), same direction, 0.356 m (14 in) to the right of tag 25 as you face the tags. That gives 2 tags for alignment.</li>
+          <li><strong>Check the QuestNav web UI</strong> for tag settings. The code changes for the beta mention confidence presets and a "Minimum Tags" setting, including a debug preset for single-tag tests on the bench. We could not confirm which of these are in the build on your headset.</li>
+        </ul>
+        <p>Phase 2 corrections need 3 tags by default. With 2 tags, the Drift Loop shows the alignment but no later corrections.</p>
+      </div>
+
+      <h3 id="bg-replay">Late pictures: rewind and replay</h3>
+      <p>Finding tags in a picture takes time. When the answer is ready, the headset has already moved on. If the filter used the answer as if it were new, it would pull the pose to an old place. So QuestNav keeps the last half second of history. It rewinds to the moment the picture was taken, applies the correction there, and then replays all the VIO movement since then. Our robot code does the same thing on the robot side: that is why <code>addVisionMeasurement</code> takes a timestamp.</p>
+
+      <h3 id="bg-pipeline">The full chain</h3>
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 330" role="img" aria-labelledby="b6t">
+          <title id="b6t">The data path. Inside the headset: the IMU and tracking cameras feed VIO at 120 per second; the passthrough camera feeds the AprilTag detector at about 30 per second. Both go to the Kalman filter. Its pose goes over NetworkTables to the robot, where QuestNavSubsystem moves it from the headset to the robot center, and the pose estimator combines it with the wheels and gyro. The fused pose goes to autos and the test routines.</title>
+          <rect class="floor" x="0" y="0" width="760" height="330" rx="4"/>
+          <rect x="10" y="10" width="512" height="310" rx="6" class="panel"/>
+          <text x="24" y="32" class="lbl-strong">Inside the headset</text>
+          <rect x="534" y="10" width="216" height="310" rx="6" class="panel"/>
+          <text x="548" y="32" class="lbl-strong">On the robot</text>
+
+          <g class="box"><rect x="28" y="48" width="160" height="54" rx="4"/></g>
+          <text x="40" y="70" class="lbl-strong">IMU</text><text x="40" y="88" class="lbl-sm">gyro + accelerometer</text>
+          <g class="box"><rect x="28" y="116" width="160" height="54" rx="4"/></g>
+          <text x="40" y="138" class="lbl-strong">Tracking cameras</text><text x="40" y="156" class="lbl-sm">see the room</text>
+          <g class="box"><rect x="220" y="80" width="140" height="58" rx="4"/></g>
+          <text x="232" y="104" class="lbl-strong">VIO</text><text x="232" y="122" class="lbl-sm">120 per second</text>
+          <path class="dim" d="M188 75 L218 100" marker-end="url(#arr)"/>
+          <path class="dim" d="M188 143 L218 120" marker-end="url(#arr)"/>
+
+          <g class="box"><rect x="28" y="214" width="160" height="54" rx="4"/></g>
+          <text x="40" y="236" class="lbl-strong">Passthrough camera</text><text x="40" y="254" class="lbl-sm">color picture</text>
+          <g class="box"><rect x="220" y="208" width="140" height="66" rx="4"/></g>
+          <text x="232" y="230" class="lbl-strong">Tag detector</text><text x="232" y="248" class="lbl-sm">+ PnP</text><text x="232" y="264" class="lbl-sm">about 30 per second</text>
+          <path class="dim" d="M188 241 L218 241" marker-end="url(#arr)"/>
+
+          <g class="box-key"><rect x="386" y="134" width="124" height="86" rx="4"/></g>
+          <text x="398" y="156" class="lbl-strong">Kalman filter</text><text x="398" y="174" class="lbl-sm">Phase 1: align</text><text x="398" y="190" class="lbl-sm">Phase 2: correct</text><text x="398" y="206" class="lbl-sm">position</text>
+          <path class="dim" d="M360 112 L392 140" marker-end="url(#arr)"/>
+          <path class="dim" d="M360 238 L392 212" marker-end="url(#arr)"/>
+
+          <path class="dim" d="M510 177 L528 177 L528 76 L546 76" marker-end="url(#arr)"/>
+          <text x="404" y="292" class="lbl-sm">to the robot over</text>
+          <text x="404" y="308" class="lbl-sm">NetworkTables (wired)</text>
+
+          <g class="box"><rect x="548" y="46" width="188" height="64" rx="4"/></g>
+          <text x="560" y="68" class="lbl-strong">QuestNavSubsystem</text><text x="560" y="86" class="lbl-sm">headset → robot center</text><text x="560" y="102" class="lbl-mono">ROBOT_TO_QUEST</text>
+          <g class="box"><rect x="548" y="136" width="188" height="72" rx="4"/></g>
+          <text x="560" y="158" class="lbl-strong">Pose estimator</text><text x="560" y="176" class="lbl-sm">+ wheels + gyro</text><text x="560" y="194" class="lbl-mono">addVisionMeasurement</text>
+          <g class="box"><rect x="548" y="234" width="188" height="64" rx="4"/></g>
+          <text x="560" y="256" class="lbl-strong">Fused pose</text><text x="560" y="274" class="lbl-sm">autos, dashboard,</text><text x="560" y="290" class="lbl-sm">test routines</text>
+          <path class="dim" d="M642 110 L642 134" marker-end="url(#arr)"/>
+          <path class="dim" d="M642 208 L642 232" marker-end="url(#arr)"/>
+        </svg>
+        </div>
+        <figcaption><b>Figure B6. The full chain from sensors to autos.</b> There are two combining steps: one inside the headset (VIO + tags) and one on the robot (headset + wheels + gyro).</figcaption>
+      </figure>
+
+      <h3 id="bg-tests">What each test checks</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Test</th><th>What it checks</th><th>Needs tag alignment?</th></tr></thead>
+        <tbody>
+          <tr><td>Offset calibration</td><td>The mount transform (<code>ROBOT_TO_QUEST</code>)</td><td>No, it covers the tag</td></tr>
+          <tr><td>Turn Sweep</td><td>The mount transform and VIO while turning</td><td>No, but the angles are relative to the tag</td></tr>
+          <tr><td>Drift Loop</td><td>VIO drift, and the Phase 2 corrections</td><td>Yes. Corrections need 3 tags by default</td></tr>
+          <tr><td>Stop At Marks</td><td>Absolute accuracy in the field frame</td><td>Yes</td></tr>
+        </tbody>
+      </table></div>
+      <p>The Drift Loop also reports a heading correction. After Phase 1 the heading offset is locked, so this value stays near 0 by design. A large value means that something else changed the heading, for example a recenter or a restart of the QuestNav app.</p>
+    </section>
+
+    <!-- ============================================================ SAFETY -->
+    <section id="safety">
+      <h2>Safety and equipment</h2>
+      <div class="callout warning">
+        <span class="tag">Warning</span>
+        <p>In Test mode and during calibration the robot moves without driver input. Keep people out of the test area. To stop the robot, disable it on the Driver Station.</p>
+      </div>
+      <div class="callout caution">
+        <span class="tag">Caution</span>
+        <p>The laser measure is a Class 2 laser. Do not look into the beam. Do not point it at people.</p>
+      </div>
+      <h3>Equipment</h3>
+      <ul>
+        <li>The tag stand with tag 25</li>
+        <li>Bosch GLM100-23 laser measure</li>
+        <li>Target board: a straight, flat board about 2 m (6 ft) long, for example a 1×4 or a strip of plywood</li>
+        <li>White tape or white sticky notes, for the bumper corners</li>
+        <li>Steel tape measure</li>
+        <li>Carpenter square</li>
+        <li>Plumb bob (a string with a weight)</li>
+        <li>Floor tape in a bright color</li>
+        <li>Driver Station, controller, and a laptop with the dashboard</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ FLOOR -->
+    <section id="floor">
+      <h2><span class="num">1</span>Floor setup</h2>
+      <p>Do this procedure one time for each test area. All measurements start from the floor mark below the tag.</p>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 300" role="img" aria-labelledby="f2t">
+          <title id="f2t">Side view of the tag stand: the tag center is 1.124 meters above the floor. A plumb bob hangs from the tag center to the floor mark.</title>
+          <rect class="floor" x="0" y="0" width="760" height="300" rx="4"/>
+          <line class="axis" x1="20" y1="262" x2="740" y2="262"/>
+          <!-- stand -->
+          <rect class="standfill" x="560" y="40" width="14" height="222"/>
+          <line class="stand" x1="520" y1="258" x2="616" y2="258" stroke-width="6"/>
+          <!-- tag (side view) on the front face -->
+          <line class="tagface" x1="555" y1="58" x2="555" y2="122"/>
+          <text x="590" y="94" class="lbl-strong">Tag 25</text>
+          <!-- height: 1.124 m = 172 px (floor 262 -> center 90) -->
+          <line class="dim" x1="660" y1="262" x2="660" y2="90" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <line class="ext" x1="574" y1="90" x2="668" y2="90"/>
+          <text x="670" y="180" class="lbl-strong">1.124 m</text>
+          <text x="670" y="198" class="lbl-sm">floor to</text>
+          <text x="670" y="214" class="lbl-sm">tag center</text>
+          <!-- plumb bob -->
+          <line class="string" x1="548" y1="90" x2="548" y2="238"/>
+          <path class="bob" d="M541 238 L555 238 L548 254 z"/>
+          <circle class="mark" cx="548" cy="262" r="5"/>
+          <text x="454" y="286" class="lbl-sm">Floor mark</text>
+          <text x="420" y="214" class="lbl-sm" text-anchor="end">Plumb bob from the</text>
+          <text x="420" y="230" class="lbl-sm" text-anchor="end">tag center</text>
+          <line class="ext" x1="424" y1="222" x2="538" y2="232"/>
+          <!-- target board edge-on along the tag plane, beside the stand -->
+          
+          <text x="40" y="60" class="lbl-sm">Measure the tag height with the tape.</text>
+          <text x="40" y="78" class="lbl-sm">Hook the tape on the floor and read</text>
+          <text x="40" y="96" class="lbl-sm">at the center of the tag.</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 2. The stand from the side.</b> Measure the height to the center of the tag, not to its bottom edge.</figcaption>
+      </figure>
+
+      <ol>
+        <li><strong>Add tag 26 (recommended).</strong> Mount it in the same plane as tag 25, at the same height, with its center 0.356 m (14 in) to the right of the tag 25 center as you face the tags. This matches the real hub face and gives the headset 2 tags for alignment.</li>
+        <li><strong>Check the tags.</strong> Each tag center must be 1.124 m above the floor. Hold a carpenter square against the tag face and the floor to make sure that the tag is vertical. If it is not correct, adjust the stand.</li>
+        <li><strong>Mark the point below the tag.</strong>
+          <ol>
+            <li>Hang the plumb bob from the center of the tag.</li>
+            <li>Let the plumb bob become stable.</li>
+            <li>Put a mark on the floor where the plumb bob touches.</li>
+          </ol>
+          Use this mark as the reference, not the base of the stand. Then the distance between the tag and the board does not have an effect on your measurements.
+        </li>
+        <li><strong>Put a tag plane line on the floor.</strong> Run a tape line through the floor mark, parallel to the tag face. You measure distances out from this line.</li>
+        <li><strong>Put a centerline on the floor.</strong>
+          <ol>
+            <li>Run a tape line from the floor mark, straight out from the tag face, for 5 m.</li>
+            <li>Make sure that the centerline is square to the tag plane line. Use the 3-4-5 triangle (Figure 3).</li>
+          </ol>
+        </li>
+        <li><strong>Put the target board on the tag plane line.</strong> Stand the board on its edge. Put its front face exactly on the tag plane line. If the base of the stand is in the way, use one board on each side of the stand. The board must reach about 1 m to each side of the centerline.</li>
+        <li><strong>Put cross lines</strong> on the centerline at 1 m, 2 m, 3 m and 4 m from the board face. These lines are only visual guides. Measure the exact values for each test.</li>
+        <li><strong>Tape the feet of the stand and the board</strong> to the floor.</li>
+      </ol>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 270" role="img" aria-labelledby="f3t">
+          <title id="f3t">A 3-4-5 triangle: 3 feet along the tag plane line, 4 feet along the centerline, and the diagonal between the two points is exactly 5 feet when the lines are square.</title>
+          <rect class="floor" x="0" y="0" width="760" height="270" rx="4"/>
+          <!-- 50 px per ft. Origin (120, 215). -->
+          <path class="tri" d="M120 215 L120 65 L320 215 z"/>
+          <line class="tagplane" x1="120" y1="20" x2="120" y2="255"/>
+          <line class="tape" x1="120" y1="215" x2="700" y2="215"/>
+          <line class="tri-edge" x1="120" y1="215" x2="120" y2="65"/>
+          <line class="tri-edge" x1="120" y1="215" x2="320" y2="215"/>
+          <line class="tri-hyp" x1="120" y1="65" x2="320" y2="215"/>
+          <circle class="mark" cx="120" cy="215" r="5"/>
+          <circle class="markdot" cx="120" cy="65" r="5"/>
+          <circle class="markdot" cx="320" cy="215" r="5"/>
+          <path class="dim" d="M120 197 L138 197 L138 215"/>
+          <text x="96" y="146" class="lbl-accent" text-anchor="end">3 ft</text>
+          <text x="220" y="240" class="lbl-accent" text-anchor="middle">4 ft</text>
+          <text x="232" y="128" class="lbl-strong">5 ft exactly</text>
+          <text x="134" y="58" class="lbl-sm">Mark on the tag plane line</text>
+          <text x="330" y="205" class="lbl-sm">Mark on the centerline</text>
+          <text x="130" y="258" class="lbl-sm">Floor mark</text>
+          <text x="470" y="60" class="lbl-sm">If the diagonal is longer than 5 ft,</text>
+          <text x="470" y="78" class="lbl-sm">the centerline leans away from the tag.</text>
+          <text x="470" y="100" class="lbl-sm">If it is shorter, the centerline leans</text>
+          <text x="470" y="118" class="lbl-sm">toward the tag. Move the far end.</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 3. Square the centerline with a 3-4-5 triangle.</b> For a larger, more accurate triangle, use 6-8-10 ft.</figcaption>
+      </figure>
+
+      <div class="callout caution">
+        <span class="tag">Caution</span>
+        <p>If the stand or the board moves, all measurements after that are incorrect. If someone hits them, do the floor setup again.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ LASER -->
+    <section id="laser">
+      <h2><span class="num">2</span>Laser measure</h2>
+      <p>The Bosch GLM100-23 measures the distance from its rear edge to the point where the red dot lands. It is accurate to ±1.5 mm (1/16 in). Use it for the two long measurements, A and B. Use the tape for the short one, C.</p>
+
+      <h3>Prepare the meter</h3>
+      <ol>
+        <li>Set the units to meters, so that the readings agree with the dashboard. See the meter manual.</li>
+        <li>Make sure that the meter measures from its rear edge. This is the default. The display shows the reference edge.</li>
+        <li>Put a piece of white tape on each corner of the bumper side that faces the tag. The red dot is hard to see on a red bumper.</li>
+      </ol>
+
+      <h3>Why the meter goes on the board</h3>
+      <p>Put the flat rear edge of the meter against the target board. Then the beam goes straight out from the tag plane, and the reading is the square distance to the tag plane. Do not hold the meter on the bumper. If the robot is at an angle, a beam from the bumper is not square to the tag, and the reading is too long.</p>
+
+      <h3>Measure the robot at a mark</h3>
+      <p>Measure three values on the bumper side that faces the tag. Routine 3 tells you which side faces the tag, and gives the values it expects.</p>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 310" role="img" aria-labelledby="f4t">
+          <title id="f4t">Plan view of the measurement. A target board stands along the tag plane line. The laser measure sits with its rear edge flat on the board and shoots straight out to a bumper corner. A is the distance to the left corner of the facing bumper side, B to the right corner. C is measured with a tape from the centerline to the middle of that side.</title>
+          <rect class="floor" x="0" y="0" width="760" height="310" rx="4"/>
+          <line class="tape" x1="78" y1="160" x2="720" y2="160"/>
+          <!-- target board along the tag plane line (front face at x=78) -->
+          <rect class="standfill" x="66" y="14" width="12" height="282" rx="2"/>
+          <text x="20" y="306" class="lbl-sm">Target board (front face on the tag plane line)</text>
+          <!-- stand behind board -->
+          <line class="stand" x1="30" y1="160" x2="60" y2="160"/>
+          <line class="tagface" x1="58" y1="134" x2="58" y2="186"/>
+          <text x="20" y="124" class="lbl-strong">Tag</text>
+          <!-- robot: west side x=300, y 68..182, rotated slightly to show the method works at an angle -->
+          <g transform="rotate(-6 357 125)">
+            <rect class="bumper" x="300" y="68" width="114" height="114" rx="6"/>
+            <rect class="headset" x="306" y="113" width="12" height="24" rx="2"/>
+            <rect x="297" y="64" width="9" height="9" class="whitetape"/>
+            <rect x="297" y="177" width="9" height="9" class="whitetape"/>
+          </g>
+          <!-- corner positions after rotate(-6) about (357,125): (300,68)->(289.3,74.3) ; (300,182)->(301.2,187.7) -->
+          <!-- meter on board for B (right corner, upper) -->
+          <rect class="laserdev" x="79" y="66" width="30" height="16" rx="3"/>
+          <line class="laser" x1="110" y1="74" x2="288" y2="74"/>
+          <circle cx="291" cy="74" r="3.5" class="dot"/>
+          <line class="dim" x1="78" y1="40" x2="291" y2="40" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <line class="ext" x1="291" y1="44" x2="291" y2="68"/>
+          <text x="184" y="32" class="lbl-strong" text-anchor="middle">B: board to right corner</text>
+          <!-- meter on board for A (left corner, lower) -->
+          <rect class="laserdev" x="79" y="180" width="30" height="16" rx="3"/>
+          <line class="laser" x1="110" y1="188" x2="300" y2="188"/>
+          <circle cx="303" cy="188" r="3.5" class="dot"/>
+          <line class="dim" x1="78" y1="250" x2="303" y2="250" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <line class="ext" x1="303" y1="194" x2="303" y2="246"/>
+          <text x="190" y="272" class="lbl-strong" text-anchor="middle">A: board to left corner</text>
+          <text x="118" y="104" class="lbl-sm">Meter rear edge flat on the board</text>
+          <!-- C with tape: from centerline (y=160) to middle of the facing side (~(295,131)) -->
+          <line class="dim" x1="270" y1="160" x2="270" y2="131" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <line class="ext" x1="270" y1="131" x2="297" y2="131"/>
+          <text x="258" y="152" class="lbl-strong" text-anchor="end">C</text>
+          <text x="440" y="70" class="lbl-sm">Right corner (as you face the tag)</text>
+          <text x="440" y="196" class="lbl-sm">Left corner</text>
+          <text x="440" y="122" class="lbl-head">Facing side: Right</text>
+          <text x="440" y="140" class="lbl-sm">(the headset side)</text>
+          <text x="440" y="236" class="lbl-sm">White tape on the corners makes</text>
+          <text x="440" y="254" class="lbl-sm">the red dot easy to see.</text>
+          <text x="590" y="152" class="lbl-sm">Centerline tape</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 4. The three measurements.</b> The meter stays square to the tag plane even when the robot is at an angle. "Left" and "right" are as you stand in front of the tag and look at it. In this drawing the robot is to the right of the centerline, so C is positive.</figcaption>
+      </figure>
+
+      <ol>
+        <li><strong>A, left corner:</strong>
+          <ol>
+            <li>Put the rear edge of the meter flat against the target board.</li>
+            <li>Turn on the laser.</li>
+            <li>Slide the meter along the board until the red dot is on the white tape at the left corner, on the face of the bumper.</li>
+            <li>Push the measure button. Record the reading.</li>
+          </ol>
+        </li>
+        <li><strong>B, right corner:</strong> Do the same steps at the right corner.</li>
+        <li><strong>C, lateral:</strong> Find the middle of the facing bumper side. Measure with the tape from the centerline tape to that point, square to the centerline. Write a plus sign if the middle is to the right of the centerline, and a minus sign if it is to the left.</li>
+        <li>Write the values on the <a href="#sheets">record sheet</a> next to the values from <code>Test/Last Snapshot</code>.</li>
+      </ol>
+      <div class="callout note">
+        <span class="tag">Note</span>
+        <p>Measure each corner two times. If the two readings are more than 2 mm apart, measure a third time and use the middle value.</p>
+      </div>
+      <p>A and B also show the heading. If A and B are equal, the bumper is square to the tag. A difference of 1 cm across a 0.88 m bumper is about 0.65°.</p>
+    </section>
+
+    <!-- ============================================================ CALIBRATION -->
+    <section id="calibration">
+      <h2><span class="num">3</span>Offset calibration</h2>
+      <p>This procedure finds where the headset is on the robot. The result goes into <code>ROBOT_TO_QUEST</code> in <code>QuestNavSubsystem.java</code>. Do it before the test routines, and again if the headset mount moves.</p>
+
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 300" role="img" aria-labelledby="f5t">
+          <title id="f5t">The robot spins in place about its rotation center. The headset moves along an arc around the center. From the arc, the code calculates the headset offset.</title>
+          <rect class="floor" x="0" y="0" width="760" height="300" rx="4"/>
+          <!-- ghost after ~86 deg CCW (screen rotate -86) -->
+          <g transform="rotate(-86 380 160)">
+            <rect class="ghost" x="310" y="90" width="140" height="140" rx="8"/>
+          </g>
+          <rect class="bumper-thin" x="310" y="90" width="140" height="140" rx="8"/>
+          <path class="front" d="M380 150 L380 104" marker-end="url(#arr-ink)"/>
+          <text x="388" y="112" class="lbl-sm">front</text>
+          <!-- headset on right side at (440,160) -->
+          <rect class="headset" x="434" y="148" width="12" height="24" rx="2"/>
+          <!-- arc of the headset: radius 60 from (440,160) to about (384,100) -->
+          <path class="orbit" d="M440 160 A60 60 0 0 0 384 100"/>
+          <path class="ray0" d="M412 108 L392 101" marker-end="url(#arr-head)"/>
+          <g transform="rotate(-86 380 160)"><rect class="headset" x="434" y="148" width="12" height="24" rx="2" opacity=".55"/></g>
+          <!-- offset vector -->
+          <line class="dim" x1="380" y1="160" x2="432" y2="160" marker-end="url(#arr)"/>
+          <circle class="mark" cx="380" cy="160" r="5"/>
+          <text x="470" y="166" class="lbl-head">Headset</text>
+          <text x="560" y="210" class="lbl-sm">Offset from the center = the</text>
+          <text x="560" y="228" class="lbl-sm">x, y of ROBOT_TO_QUEST</text>
+          <line class="ext" x1="556" y1="214" x2="412" y2="164"/>
+          <text x="120" y="250" class="lbl-sm">Rotation center (0, 0): the middle of</text>
+          <text x="120" y="268" class="lbl-sm">the four swerve modules. It does not move.</text>
+          <line class="ext" x1="250" y1="240" x2="375" y2="165"/>
+          <text x="470" y="64" class="lbl-sm">After one cycle (about 86°)</text>
+          <text x="60" y="40" class="lbl-sm">Solid: start of a cycle.</text>
+          <text x="60" y="58" class="lbl-sm">Dashed: end of a cycle.</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 5. How the calibration works.</b> Each cycle sets the Quest pose to zero, spins counter-clockwise at 0.5 rad/s for 3 seconds, and calculates one sample. The command averages the samples.</figcaption>
+      </figure>
+
+      <h3>Before you start</h3>
+      <ul class="checklist">
+        <li>Look at the headset on the robot. Make sure that the yaw in <code>ROBOT_TO_QUEST</code> agrees with the direction the headset faces. The code now uses −90°: the headset faces the right side of the robot. The calibration does not find yaw. If the yaw is wrong, the result is rotated by the same angle.</li>
+        <li>Do a yaw check. Drive the robot forward 2 m along the centerline tape. The heading of the Quest robot pose must agree with the direction of travel.</li>
+        <li>Write down the current x and y values of <code>ROBOT_TO_QUEST</code>.</li>
+        <li>Find an open area with a minimum of 1.5 m of clear floor around the robot.</li>
+        <li>Cover the tag, or turn the stand away from the robot. If the headset sees a tag during a spin, the pose can jump and give a bad sample.</li>
+        <li>Turn on the headset and let it track for 1 minute.</li>
+        <li>Find <code>questnav/Quest Calculated Offset to Robot Center</code> on the dashboard. The value is <code>[x, y]</code> in meters, +X forward and +Y left.</li>
+      </ul>
+
+      <h3>Procedure</h3>
+      <ol>
+        <li>Put the robot in the open area.</li>
+        <li>Enable the robot in teleop.</li>
+        <li>Push and hold the <strong>right bumper</strong> on the controller. The robot spins in short steps.</li>
+        <li>Hold the bumper for a minimum of 10 cycles (about 30 seconds).</li>
+        <li>Release the bumper. The robot stops.</li>
+        <li>Record the <code>[x, y]</code> value.</li>
+        <li>Turn the robot to a new start heading.</li>
+        <li>Do steps 3 to 7 again until you have 3 runs.</li>
+      </ol>
+      <div class="callout note">
+        <span class="tag">Note</span>
+        <p>Each push of the bumper starts a new average. Do not release the bumper during a run.</p>
+      </div>
+
+      <h3>Calculate and verify</h3>
+      <ol>
+        <li>Compare the 3 runs. If they are not within about 1 cm of each other, look for wheel slip and do the runs again.</li>
+        <li>Calculate the average x and the average y of the 3 runs.</li>
+        <li>New x = current x + average x. New y = current y + average y.</li>
+        <li>Put the new x and y into <code>ROBOT_TO_QUEST</code>. Do not change z or the rotation.</li>
+        <li>Deploy the code and do one more run. The result must be about <code>[0, 0]</code>, within about 1 cm.</li>
+        <li>Measure from the robot center to the headset with the tape. The result must agree to within a few centimeters. The tracking point is inside the headset, so a tape cannot give an exact value.</li>
+      </ol>
+      <div class="callout caution">
+        <span class="tag">Caution</span>
+        <p>The calibration sets the Quest pose to zero, so the pose is not in field coordinates after a run. Restart the robot code before you use the tag distance or the test routines.</p>
+      </div>
+    </section>
+
+    <!-- ============================================================ ROUTINES -->
+    <section id="routines">
+      <h2><span class="num">4</span>Test routines</h2>
+      <p>The routines run in <strong>Test</strong> mode. Each routine drives the robot the same way every time and records labeled snapshots.</p>
+
+      <h3>Before each session</h3>
+      <ol>
+        <li>Turn on the headset and let it track for 1 minute.</li>
+        <li>Put the robot 1.5 m to 2 m in front of the tag.</li>
+        <li>Let the headset see the tags. With the default QuestNav settings it must see 2 tags at the same time to align to the field (<a href="#one-tag">why</a>).</li>
+        <li>Make sure that <code>questnav/Distance To Target Tag</code> agrees approximately with the tape.</li>
+        <li>Measure the outside length and width of the robot, with bumpers. Set <code>Test/Settings/Bumper Length (m)</code> and <code>Test/Settings/Bumper Width (m)</code>.</li>
+      </ol>
+
+      <h3>Run a routine</h3>
+      <ol>
+        <li>Select the routine in the <code>Test Routine</code> chooser on the dashboard.</li>
+        <li>Select <strong>Test</strong> mode on the Driver Station.</li>
+        <li>Enable the robot. The routine starts.</li>
+        <li>Watch <code>Test/Status</code> for the current step and the result.</li>
+        <li>When the routine is done, disable the robot.</li>
+      </ol>
+      <p>To run a routine again, disable and enable the robot again. Each run gets the next run number. The routines limit the speed to <code>Max Speed (mps)</code>, 0.75 m/s by default. A routine stops if the next drive target is more than 6 m away. This usually means that the robot pose is not in field coordinates.</p>
+
+      <!-- Turn sweep -->
+      <h3 id="turn-sweep">Routine 1: Turn Sweep</h3>
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 310" role="img" aria-labelledby="f6t">
+          <title id="f6t">The robot stays on one point and turns so the headset points at angles from minus 60 to plus 60 degrees from the tag. The robot center does not move; the headset moves on a small circle.</title>
+          <rect class="floor" x="0" y="0" width="760" height="310" rx="4"/>
+          <line class="tagface" x1="60" y1="125" x2="60" y2="185"/>
+          <text x="74" y="118" class="lbl-strong">Tag 25</text>
+          <line class="tape" x1="66" y1="155" x2="290" y2="155" opacity=".35"/>
+          <!-- rays from center (440,155), length 150 -->
+          <g class="ray">
+            <line x1="440" y1="155" x2="295" y2="194"/>
+            <line x1="440" y1="155" x2="310" y2="230"/>
+            <line x1="440" y1="155" x2="334" y2="261"/>
+            <line x1="440" y1="155" x2="365" y2="285"/>
+            <line x1="440" y1="155" x2="295" y2="116"/>
+            <line x1="440" y1="155" x2="310" y2="80"/>
+            <line x1="440" y1="155" x2="334" y2="49"/>
+            <line x1="440" y1="155" x2="365" y2="25"/>
+          </g>
+          <line class="ray0" x1="440" y1="155" x2="290" y2="155" marker-end="url(#arr-head)"/>
+          <g class="lbl-mono" text-anchor="end">
+            <text x="282" y="160">0°</text>
+            <text x="287" y="204">+15°</text>
+            <text x="302" y="244">+30°</text>
+            <text x="328" y="276">+45°</text>
+            <text x="360" y="302">+60°</text>
+            <text x="287" y="112">−15°</text>
+            <text x="302" y="74">−30°</text>
+            <text x="328" y="44">−45°</text>
+            <text x="360" y="20">−60°</text>
+          </g>
+          <!-- robot at 0 deg: right side to the tag -->
+          <rect class="bumper-thin" x="390" y="105" width="100" height="100" rx="6"/>
+          <rect class="headset" x="395" y="143" width="11" height="24" rx="2"/>
+          <circle class="orbit" cx="440" cy="155" r="40"/>
+          <circle class="mark" cx="440" cy="155" r="5"/>
+          <text x="510" y="140" class="lbl-strong">The center does not move.</text>
+          <text x="510" y="160" class="lbl-sm">Any change in the reported</text>
+          <text x="510" y="178" class="lbl-sm">position is error.</text>
+          <text x="510" y="214" class="lbl-head">Headset moves on this circle</text>
+          <line class="ext" x1="506" y1="210" x2="476" y2="176"/>
+          <text x="510" y="262" class="lbl-mono">Order: 0, +15, +30, +45, +60, 0,</text>
+          <text x="510" y="280" class="lbl-mono">−15, −30, −45, −60, 0</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 6. Turn Sweep.</b> 0° is the heading where the headset points at the tag. At each angle the robot stops, waits <code>Settle Seconds</code>, and records a snapshot.</figcaption>
+      </figure>
+      <p><strong>Results:</strong></p>
+      <ul>
+        <li><code>Test/Result/TurnSweep Max Shift (m)</code>: the largest change of the Quest position from the first snapshot.</li>
+        <li><code>Test/Result/TurnSweep Max Heading Error (deg)</code>: the largest difference between the Quest heading change and the gyro heading change.</li>
+      </ul>
+      <p><strong>How to read the results:</strong> If the shift increases with the angle, <code>ROBOT_TO_QUEST</code> is not correct. Do the offset calibration again. If the shift changes only at large angles, the headset possibly cannot see the tag at those angles.</p>
+
+      <!-- Drift loop -->
+      <h3 id="drift-loop">Routine 2: Drift Loop</h3>
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 300" role="img" aria-labelledby="f7t">
+          <title id="f7t">The robot drives a square around its start point with the headset facing away from the tag. Then it stops at the start point, turns to look at the tag, and turns away again.</title>
+          <rect class="floor" x="0" y="0" width="760" height="300" rx="4"/>
+          <line class="tagface" x1="60" y1="120" x2="60" y2="180"/>
+          <text x="74" y="113" class="lbl-strong">Tag 25</text>
+          <!-- square: start (440,150), half 80 -->
+          <path class="path" d="M360 230 L520 230" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M520 230 L520 70" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M520 70 L360 70" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M360 70 L360 230" marker-end="url(#arr-ink)"/>
+          <!-- robot at start, headset facing away (east) -->
+          <rect class="bumper-thin" x="410" y="120" width="60" height="60" rx="5"/>
+          <rect class="headset" x="458" y="138" width="8" height="24" rx="2"/>
+          <path class="ray0" d="M472 150 L506 150" marker-end="url(#arr-head)"/>
+          <circle class="mark" cx="440" cy="150" r="4"/>
+          <!-- look at the tag -->
+          <path class="ray" d="M410 150 L80 150"/>
+          <path class="front" d="M418 112 A44 44 0 0 0 418 188" marker-end="url(#arr-ink)" opacity=".6"/>
+          <text x="140" y="140" class="lbl-head">Step 4: look at the tag</text>
+          <text x="540" y="146" class="lbl-head">Steps 1–3: headset</text>
+          <text x="540" y="164" class="lbl-head">faces away from the tag</text>
+          <text x="370" y="58" class="lbl-sm">Drift Square (m), centered on the start point</text>
+          <text x="370" y="258" class="lbl-sm">Loops until Drift Seconds is over</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 7. Drift Loop.</b> During the look at the tag the robot only turns in place, so the pose change between "before tag" and "after tag" is the drift that the tag corrected.</figcaption>
+      </figure>
+      <ol>
+        <li>The robot turns so that the headset points away from the tag.</li>
+        <li>The robot drives the square for <code>Drift Seconds</code>. The headset continues to point away from the tag.</li>
+        <li>The robot goes back to the start point and records the <code>before tag</code> snapshot.</li>
+        <li>The robot turns to the tag and waits <code>Tag View Seconds</code>.</li>
+        <li>The robot turns away again and records the <code>after tag</code> snapshot.</li>
+      </ol>
+      <p><strong>Results:</strong> <code>Test/Result/Drift Correction (m)</code> and <code>Test/Result/Drift Heading Correction (deg)</code> (the heading is compared with the gyro). Run it with <code>Drift Seconds</code> at 30, 60 and 150 (the length of a match). Keep <code>Drift Square (m)</code> smaller than the hallway.</p>
+
+      <!-- Marks -->
+      <h3 id="stop-at-marks">Routine 3: Stop At Marks</h3>
+      <figure>
+        <div class="draw">
+        <svg viewBox="0 0 760 300" role="img" aria-labelledby="f8t">
+          <title id="f8t">Six marks in front of the tag: 1, 2, 3 and 4 meters on the centerline, then 2 meters out with 0.5 meters to the right and to the left. The robot drives to them in order.</title>
+          <rect class="floor" x="0" y="0" width="760" height="300" rx="4"/>
+          <line class="tagplane" x1="60" y1="16" x2="60" y2="284"/>
+          <line class="tape" x1="60" y1="150" x2="720" y2="150"/>
+          <line class="tagface" x1="53" y1="122" x2="53" y2="178"/>
+          <circle class="mark" cx="60" cy="150" r="5"/>
+          <text x="20" y="200" class="lbl-strong">Tag 25</text>
+          <!-- 140 px per m: marks at 200, 340, 480, 620; side marks at 340, 150 -/+ 70 -->
+          <path class="path" d="M214 150 L326 150" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M354 150 L466 150" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M494 150 L606 150" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M610 140 C560 80 420 72 354 78" marker-end="url(#arr-ink)"/>
+          <path class="path" d="M340 94 L340 206" marker-end="url(#arr-ink)" opacity=".7"/>
+          <g>
+            <circle class="markdot" cx="200" cy="150" r="13"/><text class="markdot-txt" x="200" y="155">1</text>
+            <circle class="markdot" cx="340" cy="150" r="13"/><text class="markdot-txt" x="340" y="155">2</text>
+            <circle class="markdot" cx="480" cy="150" r="13"/><text class="markdot-txt" x="480" y="155">3</text>
+            <circle class="markdot" cx="620" cy="150" r="13"/><text class="markdot-txt" x="620" y="155">4</text>
+            <circle class="markdot" cx="340" cy="80" r="13"/><text class="markdot-txt" x="340" y="85">5</text>
+            <circle class="markdot" cx="340" cy="220" r="13"/><text class="markdot-txt" x="340" y="225">6</text>
+          </g>
+          <!-- robot icon at mark 5, turned so its right (headset) side faces the tag -->
+          <g transform="rotate(-14 395 80)">
+            <rect class="bumper-thin" x="370" y="55" width="50" height="50" rx="4"/>
+            <rect class="headset" x="373" y="70" width="7" height="20" rx="2"/>
+          </g>
+          <path class="ray" d="M368 86 L80 150"/>
+          <g class="lbl-mono" text-anchor="middle">
+            <text x="200" y="182">1.0 m</text><text x="480" y="182">3.0 m</text><text x="620" y="182">4.0 m</text>
+          </g>
+          <text x="352" y="250" class="lbl-mono">6: 2.0 m, 0.5 m left</text>
+          <text x="430" y="40" class="lbl-mono">5: 2.0 m, 0.5 m right</text>
+          <text x="430" y="58" class="lbl-sm">At marks 5 and 6 the robot turns about 14°</text>
+          <text x="430" y="74" class="lbl-sm">so the headset points at the tag.</text>
+          <text x="560" y="230" class="lbl-sm">"Right" and "left" are as you</text>
+          <text x="560" y="248" class="lbl-sm">face the tag.</text>
+        </svg>
+        </div>
+        <figcaption><b>Figure 8. Stop At Marks.</b> The robot drives to the marks in order 1 to 6, stops, records a snapshot, and waits for you to measure.</figcaption>
+      </figure>
+      <p>At each mark:</p>
+      <ol>
+        <li>Wait until <code>Test/Status</code> says "measure".</li>
+        <li>Read <code>Test/Last Snapshot</code>. It gives the bumper side that faces the tag and the values it expects for A, B and C.</li>
+        <li>Measure A, B and C with the laser measure and the tape (<a href="#laser">Figure 4</a>).</li>
+        <li>Write the measured values next to the expected values.</li>
+        <li>Press <strong>Y</strong> on the controller, or set <code>Test/Continue</code> to true. The robot drives to the next mark.</li>
+      </ol>
+      <p>By default the headset points at the tag, so the <strong>right</strong> bumper faces the tag. At marks 5 and 6 the robot is at an angle, so A and B are different. To make the front bumper face the tag, set <code>Test/Settings/Marks: Front Faces Tag</code> to true. Then the headset cannot see the tag.</p>
+    </section>
+
+    <!-- ============================================================ DATA -->
+    <section id="data">
+      <h2><span class="num">5</span>Data and settings</h2>
+      <p>Each snapshot goes to three places:</p>
+      <ul>
+        <li><strong>Dashboard:</strong> <code>Test/Last Snapshot</code> shows the latest snapshot as text.</li>
+        <li><strong>NetworkTables:</strong> <code>Test/Snapshot/</code> has each value. The <code>.wpilog</code> records them, so you can see them in AdvantageScope.</li>
+        <li><strong>Console:</strong> one CSV line that starts with <code>SNAPSHOT,</code>. The first line is <code>SNAPSHOT_HEADER,</code> with the column names. The <code>.wpilog</code> also records the console.</li>
+      </ul>
+
+      <p>QuestPose and FusedPose are in the 2026 field frame. See <a href="#frame-2026">the 2026 frame note</a> to change them to the 2027 frame. The other values do not depend on the field origin.</p>
+
+      <h3>Snapshot values</h3>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td>QuestPose</td><td>Robot pose from the headset (no soft reset)</td></tr>
+          <tr><td>FusedPose</td><td>Robot pose from the drivetrain estimator (wheels, gyro and Quest)</td></tr>
+          <tr><td>Gyro Heading</td><td>Raw gyro heading</td></tr>
+          <tr><td>Center Distance, Center Lateral</td><td>Robot center in the tag frame</td></tr>
+          <tr><td>Heading To Tag</td><td>0° when the front of the robot points at the tag</td></tr>
+          <tr><td>Facing Side</td><td>Bumper side nearest to the tag: Front, Left, Back or Right</td></tr>
+          <tr><td>Left / Right Corner Distance</td><td>Expected A and B</td></tr>
+          <tr><td>Side Lateral</td><td>Expected C</td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Settings</h3>
+      <p>All settings are under <code>Test/Settings/</code> on the dashboard.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Setting</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>Tag ID</code></td><td>25</td><td>The tag that the routines use</td></tr>
+          <tr><td><code>Max Speed (mps)</code></td><td>0.75</td><td>Maximum drive speed</td></tr>
+          <tr><td><code>Settle Seconds</code></td><td>2.0</td><td>Wait time before each snapshot</td></tr>
+          <tr><td><code>Drift Seconds</code></td><td>30</td><td>Routine 2 only</td></tr>
+          <tr><td><code>Drift Square (m)</code></td><td>1.0</td><td>Routine 2 only</td></tr>
+          <tr><td><code>Tag View Seconds</code></td><td>3.0</td><td>Routine 2 only</td></tr>
+          <tr><td><code>Bumper Length (m)</code></td><td>0.88</td><td>Outside length with bumpers. Measure your robot</td></tr>
+          <tr><td><code>Bumper Width (m)</code></td><td>0.88</td><td>Outside width with bumpers. Measure your robot</td></tr>
+          <tr><td><code>Marks: Front Faces Tag</code></td><td>false</td><td>Routine 3 only</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- ============================================================ SHEETS -->
+    <section id="sheets">
+      <h2><span class="num">6</span>Record sheets</h2>
+
+      <h3>Offset calibration</h3>
+      <div class="table-wrap"><table class="sheet">
+        <thead><tr><th>Run</th><th>Start heading</th><th>Cycles</th><th>Tag covered</th><th>x (m)</th><th>y (m)</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>Average</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>Verify</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Stop At Marks</h3>
+      <div class="table-wrap"><table class="sheet">
+        <thead><tr><th>Mark</th><th>Side</th><th>A expected</th><th>A measured</th><th>B expected</th><th>B measured</th><th>C expected</th><th>C measured</th></tr></thead>
+        <tbody>
+          <tr><td>1 · 1.0 m</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>2 · 2.0 m</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>3 · 3.0 m</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>4 · 4.0 m</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>5 · 2.0 m, 0.5 R</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>6 · 2.0 m, 0.5 L</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table></div>
+
+      <h3>Turn Sweep and Drift Loop</h3>
+      <div class="table-wrap"><table class="sheet">
+        <thead><tr><th>Routine</th><th>Run</th><th>Setting</th><th>Shift / correction (m)</th><th>Heading (deg)</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Turn Sweep</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>Turn Sweep</td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>Drift Loop</td><td></td><td>30 s</td><td></td><td></td><td></td></tr>
+          <tr><td>Drift Loop</td><td></td><td>60 s</td><td></td><td></td><td></td></tr>
+          <tr><td>Drift Loop</td><td></td><td>150 s</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+    <!-- ============================================================ APPENDIX -->
+    <section id="appendix">
+      <h2><span class="num">A</span>Appendix: the math</h2>
+      <p>This appendix is optional. It shows the math behind <a href="#how-it-works">How QuestNav works</a>, with worked numbers. You need algebra and some trigonometry (sine and cosine). Angles are in radians in the formulas: 1° ≈ 0.01745 rad.</p>
+
+      <h3 id="a-frames">A.1 Frames and transforms</h3>
+      <p>A point on the robot, for example the headset, has a position <var>(a, b)</var> in the <strong>robot frame</strong>: <var>a</var> meters forward, <var>b</var> meters to the left of the robot center. If the robot pose is <var>(x, y, θ)</var>, the same point in the field frame is:</p>
+      <div class="eq">x<sub>field</sub> = x + a·cos θ − b·sin θ<br>y<sub>field</sub> = y + a·sin θ + b·cos θ</div>
+      <p>First you turn the point by the robot heading, then you add the robot position.</p>
+      <p class="worked"><strong>Worked example.</strong> The robot is at (2.0, 1.0) with θ = 90° (facing +Y). The headset is on the right side: (a, b) = (0, −0.30).<br>
+        x<sub>field</sub> = 2.0 + 0·0 − (−0.30)·1 = 2.30<br>
+        y<sub>field</sub> = 1.0 + 0·1 + (−0.30)·0 = 1.0<br>
+        The robot faces +Y, so its right side points toward +X. The headset is 0.30 m in +X from the center. Correct.</p>
+      <p>The code goes the other way: it knows the headset pose and wants the robot pose. That is the <strong>inverse</strong> transform: undo the mount offset. In WPILib this is one line: <code>questPose.transformBy(ROBOT_TO_QUEST.inverse())</code>.</p>
+
+      <h3 id="a-drift">A.2 How errors grow</h3>
+      <p><strong>IMU bias.</strong> If the accelerometer reads a constant error <var>b</var> (m/s²), adding it up two times gives a position error:</p>
+      <div class="eq">e(t) = ½ · b · t²</div>
+      <p><strong>Heading error.</strong> If the heading is wrong by an angle <var>ε</var>, driving a distance <var>d</var> puts you to the side by:</p>
+      <div class="eq">e = d · sin ε ≈ d · ε &nbsp;&nbsp;(ε in radians)</div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>IMU bias 0.01 m/s²</th><th>Error</th><th>Heading error 1°</th><th>Error</th></tr></thead>
+        <tbody>
+          <tr><td>after 1 s</td><td>0.005 m</td><td>after 1 m</td><td>0.017 m</td></tr>
+          <tr><td>after 5 s</td><td>0.125 m</td><td>after 5 m</td><td>0.087 m</td></tr>
+          <tr><td>after 10 s</td><td>0.50 m</td><td>after 15 m</td><td>0.26 m</td></tr>
+        </tbody>
+      </table></div>
+      <p>The IMU error grows with <em>time squared</em>, so the cameras must correct it all the time. The heading error grows with <em>distance driven</em>, so it matters most in long autos.</p>
+
+      <h3 id="a-cal">A.3 The offset calibration</h3>
+      <p>Let <var>d</var> be the vector from the robot center to the point that the code tracks. When the robot turns in place by <var>θ</var>, the center does not move, but the tracked point moves by:</p>
+      <div class="eq">Δ = (R(θ) − I) · d &nbsp;&nbsp; where &nbsp; R(θ) = [ cos θ &nbsp; −sin θ ; &nbsp; sin θ &nbsp; cos θ ]</div>
+      <p><var>R(θ)</var> is the rotation matrix and <var>I</var> is the identity matrix. The code measures <var>Δ</var> and <var>θ</var> from the headset, then solves for <var>d</var>:</p>
+      <div class="eq">d<sub>x</sub> = [ (cos θ − 1)·Δ<sub>x</sub> + sin θ·Δ<sub>y</sub> ] / [ 2(1 − cos θ) ]<br>d<sub>y</sub> = [ −sin θ·Δ<sub>x</sub> + (cos θ − 1)·Δ<sub>y</sub> ] / [ 2(1 − cos θ) ]</div>
+      <p class="worked"><strong>Worked example.</strong> The headset is really at d = (0, −0.30), but <code>ROBOT_TO_QUEST</code> says (0, 0). The robot turns θ = 90°: cos θ = 0, sin θ = 1.<br>
+        Δ = (R − I)·d = ( −1·0 − 1·(−0.30), 1·0 − 1·(−0.30) ) = (0.30, 0.30). That is 0.42 m of apparent movement.<br>
+        Solve: d<sub>x</sub> = [ −1·0.30 + 1·0.30 ] / 2 = 0, &nbsp; d<sub>y</sub> = [ −1·0.30 − 1·0.30 ] / 2 = −0.30. The code gets the offset back.</p>
+      <p>A measurement error in <var>Δ</var> becomes an error in <var>d</var> that is multiplied by <var>1 / (2 sin(θ/2))</var>. At 86° (one cycle of our command) the factor is 0.73. At 180° it is 0.50, the best case. This is why larger turns give a better calibration, and why very small turns are rejected in the code.</p>
+
+      <h3 id="a-pnp">A.4 Why far tags are less accurate</h3>
+      <p>A simple camera model (the <strong>pinhole model</strong>) says that an object of real width <var>s</var> at distance <var>d</var> looks <var>w</var> pixels wide:</p>
+      <div class="eq">w = f · s / d &nbsp;&nbsp;so&nbsp;&nbsp; d = f · s / w</div>
+      <p><var>f</var> is the focal length of the camera, in pixels. If the detector gets the width wrong by <var>δw</var> pixels, the distance is wrong by about:</p>
+      <div class="eq">δd ≈ ( d² / (f · s) ) · δw</div>
+      <p class="worked"><strong>Worked example.</strong> Use f = 500 px. This is an example value, not the real number for the Quest camera. The tag is s = 0.1651 m.<br>
+        At 2 m: the tag is 41 px wide. One pixel of error gives δd ≈ 4 / 82.6 ≈ 0.05 m.<br>
+        At 4 m: the tag is 21 px wide. One pixel of error gives δd ≈ 16 / 82.6 ≈ 0.19 m.<br>
+        Two times the distance gives four times the error.</p>
+      <p>QuestNav uses the same <var>d²</var> rule to decide how much to trust a tag view. With <var>n</var> tags at an average distance <var>d</var>:</p>
+      <div class="eq">σ = 0.05 m × d² / n</div>
+      <p>3 tags at 2 m: σ ≈ 0.067 m (a strong pull). 2 tags at 5 m: σ ≈ 0.625 m (a gentle nudge). The height (z) gets twice this σ, because PnP finds height less well.</p>
+
+      <h3 id="a-kalman">A.5 A Kalman filter in one dimension</h3>
+      <p>A Kalman filter keeps two numbers for each value it tracks: the best guess <var>x̂</var>, and how unsure it is, the <strong>variance</strong> <var>P</var> (the standard deviation squared). It repeats two steps.</p>
+      <p><strong>Predict</strong> (each VIO step): move the guess by the measured motion, and become a little less sure.</p>
+      <div class="eq">x̂ ← x̂ + Δ<sub>VIO</sub> &nbsp;&nbsp;&nbsp; P ← P + Q</div>
+      <p><strong>Update</strong> (each accepted tag view <var>z</var>, with variance <var>R = σ²</var>): blend the guess and the measurement.</p>
+      <div class="eq">K = P / (P + R) &nbsp;&nbsp;&nbsp; x̂ ← x̂ + K·(z − x̂) &nbsp;&nbsp;&nbsp; P ← (1 − K)·P</div>
+      <p><var>K</var> is the <strong>gain</strong>, between 0 and 1. If the filter is unsure (<var>P</var> large) and the tag is good (<var>R</var> small), <var>K</var> is near 1 and the guess moves almost all the way to the tag. If the tag is poor, <var>K</var> is near 0 and the guess hardly moves.</p>
+      <p class="worked"><strong>Worked example.</strong> The filter thinks x̂ = 1.00 m with σ = 0.10 m, so P = 0.010. A tag view says z = 1.10 m.<br>
+        3 tags at 2 m: σ = 0.067, R = 0.0045. K = 0.010 / 0.0145 = 0.69. New x̂ = 1.00 + 0.69 × 0.10 = 1.069 m. New P = 0.31 × 0.010 = 0.0031 (σ ≈ 0.056 m).<br>
+        2 tags at 5 m: σ = 0.625, R = 0.39. K = 0.010 / 0.40 = 0.025. New x̂ = 1.0025 m. The far view hardly changes the guess.</p>
+      <p>QuestNav runs this with three values at once (x, y, z). Its documented process noise is Q = diag(0.02², 0.02², 0.01²) for each VIO step. Heading is not in the filter: it comes from VIO plus the heading offset that Phase 1 locked.</p>
+
+      <h3 id="a-robot">A.6 The robot's pose estimator</h3>
+      <p>The pose estimator in the CTRE drivetrain uses the same idea with three values: x, y and θ. Wheel and gyro odometry is the "predict" step. Each <code>addVisionMeasurement</code> call is an "update" step, and the standard deviations you pass are the <var>σ</var> values for <var>R</var>.</p>
+      <p>Our <code>QUESTNAV_STD_DEVS</code> are (0.02 m, 0.02 m, 0.087 rad). An x/y σ of 0.02 m is small, so the gain is high and the estimate follows the headset closely. If the headset is not aligned to the field, the estimate follows it to the wrong place. That is another reason to confirm the alignment before a test.</p>
+
+      <h3 id="a-sources">Sources</h3>
+      <ul>
+        <li>QuestNav AprilTag docs (in the QuestNav repository): <a href="https://github.com/QuestNav/QuestNav/blob/main/docs/docs/4-apriltag-tracking/1-apriltag-overview.md">overview</a>, <a href="https://github.com/QuestNav/QuestNav/blob/main/docs/docs/4-apriltag-tracking/2-coordinate-systems.md">coordinate systems</a>, <a href="https://github.com/QuestNav/QuestNav/blob/main/docs/docs/4-apriltag-tracking/3-detection-pipeline.md">detection pipeline</a>, <a href="https://github.com/QuestNav/QuestNav/blob/main/docs/docs/4-apriltag-tracking/4-kalman-filter.md">Kalman filter</a></li>
+        <li><a href="https://github.com/QuestNav/QuestNav/releases/tag/2026-3.0.0-beta">QuestNav 2026-3.0.0-beta release</a> and the <a href="https://github.com/QuestNav/QuestNav/pull/151">AprilTag support pull request</a></li>
+        <li><a href="https://questnav.gg/">QuestNav documentation site</a></li>
+        <li>WPILib 2026 field layout (<code>2026-rebuilt-welded.json</code>), the same layout that the QuestNav beta uses</li>
+      </ul>
+      <p class="small-note">The phase rules and numbers above come from the QuestNav docs for the 2026-3.0.0-beta release. QuestNav is changing fast. If the behavior on your headset does not agree, the build on the headset wins.</p>
+    </section>
+  </main>
+</div>

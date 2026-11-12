@@ -26,6 +26,9 @@ import frc.robot.lib.BLine.FollowPath;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.Utility;
+import frc.robot.testing.QuestNavTestRoutines;
+import frc.robot.testing.TestSettings;
+import frc.robot.testing.TestSnapshotLogger;
 
 public class RobotContainer {
     private double MaxSpeed = 1.0 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond); // kSpeedAt12Volts desired top speed
@@ -52,6 +55,18 @@ public class RobotContainer {
     /** Auto chooser with one entry per BLine path file, plus the original drive-forward auto. */
     public final BLineAutos autos;
 
+    /** QuestNav test routines, run in Test mode from the "Test Routine" chooser. */
+    public final QuestNavTestRoutines testRoutines;
+    private final SendableChooser<Command> testChooser = new SendableChooser<>();
+
+    private void configureTestRoutines() {
+        testChooser.setDefaultOption("None", Commands.none());
+        testChooser.addOption("1. Turn Sweep", testRoutines.turnSweep());
+        testChooser.addOption("2. Drift Loop", testRoutines.driftLoop());
+        testChooser.addOption("3. Stop At Marks", testRoutines.stopAtMarks());
+        SmartDashboard.putData("Test Routine", testChooser);
+    }
+
     private void configureAutos() {
         autoChooser.setDefaultOption(
             "Do Nothing",
@@ -67,8 +82,20 @@ public class RobotContainer {
     }
 
     public RobotContainer() {
+        TestSettings testSettings = new TestSettings();
+        testRoutines = new QuestNavTestRoutines(
+            drivetrain,
+            questNavSubsystem,
+            testSettings,
+            new TestSnapshotLogger(
+                questNavSubsystem::getQuestRobotPose,
+                drivetrain::getPose,
+                () -> drivetrain.getState().RawHeading,
+                testSettings),
+            () -> joystick.getHID().getYButton());
         configureBindings();
         configureAutos();
+        configureTestRoutines();
 
         FollowPath.Builder pathBuilder = new FollowPath.Builder(
             drivetrain,
@@ -127,6 +154,11 @@ public class RobotContainer {
         joystick.leftBumper().onTrue(drivetrain.runOnce(drivetrain::seedFieldCentric));
 
         drivetrain.registerTelemetry(logger::telemeterize);
+    }
+
+    /** The routine selected in the "Test Routine" chooser. */
+    public Command getTestCommand() {
+        return testChooser.getSelected();
     }
 
     public Command getAutonomousCommand() {
