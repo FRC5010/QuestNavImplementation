@@ -24,7 +24,7 @@ cd tools/groundtruth
 .venv/bin/python -m pytest
 ```
 
-The tests use a synthetic hallway: the fake hub (tags 25, 26 and 24), three floor tags, a robot
+The tests use a synthetic hallway: the fake hub (tags 24 and 21 facing the test area, 25 and 26 on the other face), three floor tags, a robot
 with a tag on each bumper corner, and two GoPro-like cameras 90° apart and 2.3 m high.
 
 ## Modules
@@ -55,7 +55,7 @@ Copy `setup.example.json` to `setup.json` and replace the values with your measu
 | Field | Meaning |
 |---|---|
 | `tag_size_m` | Edge of the black square of the printed tags. Measure a print |
-| `reference_tag` | The hub tag that the floor tag positions are measured from (25) |
+| `reference_tag` | The hub tag that the test area is in front of, and that the floor tag positions are measured from (24) |
 | `hub_tag_ids` | The hub tags on the hallway walls |
 | `robot_tags` | Each robot tag: center position in the robot frame (m), and `yaw_deg`, the direction the face points, counter-clockwise from robot forward |
 | `floor_tags` | Each floor tag: `distance` straight out from the reference tag face (m), `lateral` to your right as you face that tag (m), and `top_yaw_deg`, the direction of the tag's top edge, counter-clockwise (seen from above) from "straight away from the wall" |

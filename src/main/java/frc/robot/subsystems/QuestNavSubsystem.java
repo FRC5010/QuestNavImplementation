@@ -46,7 +46,7 @@ public class QuestNavSubsystem extends SubsystemBase {
     // Field layout for the current game; used to report the distance to a chosen AprilTag.
     public static final AprilTagFieldLayout FIELD_LAYOUT =
             AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-    private static final int DEFAULT_TARGET_TAG_ID = 25;
+    private static final int DEFAULT_TARGET_TAG_ID = 24; // The test area is in front of tag 24 (see docs/ground-truth-design.md).
     private int _calculatedOffsetToRobotCenterCount = 0;
     private String networkTableRoot = "questnav";
 

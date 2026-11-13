@@ -1,4 +1,5 @@
-"""A synthetic test area: the fake hub (tags 25, 26, 24), three floor tags, a robot with four
+"""A synthetic test area: the fake hub (tags 24 and 21 on the face toward the test area, 25 and
+26 on the other face), three floor tags, a robot with four
 corner tags, and two GoPro-like cameras 90 degrees apart, 2.3 m high."""
 
 from __future__ import annotations

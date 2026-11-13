@@ -69,8 +69,8 @@ class FloorTag:
 @dataclass
 class Setup:
     tag_size: float = FRC_TAG_SIZE_M
-    reference_tag: int = 25
-    hub_tag_ids: list[int] = field(default_factory=lambda: [25, 26, 24])
+    reference_tag: int = 24
+    hub_tag_ids: list[int] = field(default_factory=lambda: [24, 21, 25, 26])
     robot_tags: dict[int, RobotTag] = field(default_factory=dict)
     floor_tags: dict[int, FloorTag] = field(default_factory=dict)
     layout: dict[int, Pose3] = field(default_factory=load_field_layout)
@@ -91,8 +91,8 @@ class Setup:
         layout = load_field_layout(d["layout"]) if "layout" in d else load_field_layout()
         return Setup(
             tag_size=float(d.get("tag_size_m", FRC_TAG_SIZE_M)),
-            reference_tag=int(d.get("reference_tag", 25)),
-            hub_tag_ids=[int(i) for i in d.get("hub_tag_ids", [25, 26, 24])],
+            reference_tag=int(d.get("reference_tag", 24)),
+            hub_tag_ids=[int(i) for i in d.get("hub_tag_ids", [24, 21, 25, 26])],
             robot_tags={int(t["id"]): RobotTag(int(t["id"]), t["x"], t["y"], t["z"], t["yaw_deg"])
                         for t in d.get("robot_tags", [])},
             floor_tags={int(t["id"]): FloorTag(int(t["id"]), t["distance"], t["lateral"],

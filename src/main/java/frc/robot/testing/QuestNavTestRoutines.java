@@ -190,12 +190,13 @@ public class QuestNavTestRoutines {
             steps.add(waitForContinue(heading));
         }
         steps.add(optionalSyncWiggle(MARKS + " end"));
+        steps.add(logger.status("Marks done: " + MARKS_M.length + " marks. Disable the robot."));
         return withEnd(Commands.sequence(steps.toArray(Command[]::new)), MARKS);
     }
 
     /** Routine 0: one sync wiggle on its own. */
     public Command syncWiggle() {
-        return withEnd(syncWiggleBody(SYNC), SYNC);
+        return withEnd(syncWiggleBody(SYNC).andThen(logger.status("Sync wiggle done. Disable the robot.")), SYNC);
     }
 
     // ---------------------------------------------------------------- results

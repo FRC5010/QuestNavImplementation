@@ -24,7 +24,8 @@ public class TestSettings {
     public static final String CONTINUE = "Test/Continue";
 
     public TestSettings() {
-        SmartDashboard.setDefaultNumber(TAG_ID, 25);
+        // The hallway test area is in front of tag 24.
+        SmartDashboard.setDefaultNumber(TAG_ID, 24);
         SmartDashboard.setDefaultNumber(MAX_SPEED, 0.75);
         SmartDashboard.setDefaultNumber(SETTLE_SECONDS, 2.0);
         SmartDashboard.setDefaultNumber(DRIFT_SECONDS, 30.0);
@@ -45,7 +46,7 @@ public class TestSettings {
     }
 
     public int tagId() {
-        return (int) SmartDashboard.getNumber(TAG_ID, 25);
+        return (int) SmartDashboard.getNumber(TAG_ID, 24);
     }
 
     public double maxSpeedMps() {

@@ -21,8 +21,8 @@ Nothing about truth runs on the robot, and truth never goes into the drivetrain 
 
 ## Summary
 
-1. A fake hub on an outside corner of the hallway has tags 25 and 26 on one wall and tag 24 on
-   the other wall. The headset uses these tags.
+1. A fake hub on an outside corner of the hallway has tags 24 and 21 on one face and tags 25 and
+   26 on the other face. The headset uses these tags.
 2. Two GoPros on tripods, 2.0 m to 2.5 m high, look down at the test area from directions about
    90° apart. They record the whole test.
 3. The robot has four AprilTags, one on each bumper corner at 45°. Their IDs are not in the
@@ -61,9 +61,9 @@ distance from the camera). Example: a GoPro at 4K in Linear lens mode has a foca
 
 | Item | Quantity | Notes |
 |---|---|---|
-| GoPro | 2 | See the settings below |
+| Camera | 2 | A GoPro HERO13 Black and an Akaso. See [Cameras](#cameras) |
 | Tripod, 2.0 m to 2.5 m | 2 | Must not move during a session. Tape the legs to the floor |
-| AprilTags, 36h11, 165.1 mm, flat (on aluminum or foam board) | 4 robot + 3 hub + 3 floor | Print at 100% and measure the printed size |
+| AprilTags, 36h11, 165.1 mm, flat (on aluminum or foam board) | 4 robot + 4 hub + 3 floor | Print at 100% and measure the printed size |
 | ChArUco calibration board | 1 | For the lens calibration. Flat and stiff |
 | External power for the GoPros | 2 | A session can be longer than one battery |
 | Lights, if the hallway is dark | as needed | A fast shutter needs light |
@@ -72,32 +72,150 @@ distance from the camera). Example: a GoPro at 4K in Linear lens mode has a foca
 
 | Use | IDs | Where |
 |---|---|---|
-| Hub | 25, 26 on the wall that faces the test area. 24 on the other wall | Centers 1.124 m high. 25 and 24 are 0.248 m from the corner. 26 is 0.603 m from the corner |
-| Robot | 40, 41, 42, 43 | Bumper corners, at 45°. Front-left, front-right, back-right, back-left |
+| Hub | 24, 21 on the face toward the test area. 25, 26 on the other face | Centers 1.124 m high. 24 and 25 are 0.248 m from the corner. 21 and 26 are about 0.60 m from the corner |
+| Robot | 1, 2, 3, 4 (from the FRC set) | Bumper corners, at 45°. Measure which ID is on which corner and enter it in `setup.json` |
 | Floor survey | 50, 51, 52 | Flat on the floor in the test area, at laser-measured points |
 
-IDs 40 to 52 are not in the field layout, so QuestNav must ignore them. Make sure of this on the
-headset before the first test.
+The robot tags (1 to 4) are in the field layout, but this is not a problem: the headset is on the
+same robot, so it can never see them, and the tool uses them only as robot tags. Do not put
+tags 1 to 4 anywhere else in the hallway.
 
-### GoPro settings
+The floor tags (50 to 52) are not in the field layout, so QuestNav must ignore them. The headset
+sees them only at a very low angle, if at all. Make sure of this on the headset before the first
+test.
+
+### Cameras
+
+The team has a **GoPro HERO13 Black** and an **Akaso** action camera (model unknown). The Akaso
+records 4K at 60 fps, and its stabilization can be turned off.
+The two cameras can be different: each camera has its own lens calibration and its own clock
+sync.
+
+- **GoPro HERO13 Black:** the main camera. It has a Linear lens mode and manual (Protune) shutter
+  and ISO.
+- **Akaso:** the second camera. Most Akaso models have a fisheye lens, a smaller choice of manual
+  settings, and electronic stabilization (EIS). See [Akaso settings](#akaso-settings).
 
 Use the same settings for the lens calibration and for every test. If a setting changes, do the
-lens calibration again.
+lens calibration again. The tool reads the time of each frame from the video file, not from the
+frame number, so 59.94 fps and dropped frames are not a problem.
+
+### GoPro HERO13 Black settings
+
+The names are from the HERO13 menus. Select **Pro** controls to see the Protune settings.
 
 | Setting | Value | Reason |
 |---|---|---|
-| Resolution, frame rate | 4K, 60 fps | Resolution gives accuracy. 60 fps gives timing |
-| Lens (digital lens) | Linear, with horizon leveling off | Nearly straight lines. Easier to calibrate |
-| HyperSmooth (stabilization) | **Off** | Stabilization moves the image. Then the camera pose is not fixed |
+| Resolution, aspect, frame rate | 4K, 16:9, 60 fps | Resolution gives accuracy. 60 fps gives timing |
+| Lens | Linear (not "Linear + Horizon Leveling" or "Linear + Horizon Lock") | Nearly straight lines. Horizon leveling rotates the image |
+| HyperSmooth | **Off** | Stabilization moves the image. Then the camera pose is not fixed |
 | Zoom | 1× | Zoom changes the lens model |
-| Protune shutter | 1/480 s or faster | Prevents smear on a moving robot |
-| Protune ISO max | 1600 | Allows the fast shutter. Add light if the image is noisy |
-| Protune white balance | Locked (not Auto) | Prevents color changes during a run |
-| Protune sharpness | Low | Strong sharpening moves tag edges |
+| Lens mod | None | A lens mod changes the lens model |
+| Shutter | 1/480 s (or 1/960 s) | Prevents smear on a moving robot |
+| ISO min / max | 100 / 1600 | Allows the fast shutter. Add light if the image is noisy |
+| White balance | A fixed value, for example 5500K (not Auto) | Prevents color changes during a run |
+| Sharpness | Low | Strong sharpening moves tag edges |
+| Bit rate | High | Fewer compression artifacts on the tag edges |
 | Orientation | Locked | Prevents a rotated recording |
+| Auto power off | Never | A session can be long. Use USB-C power |
 
-The tool reads the time of each frame from the video file, not from the frame number. A GoPro
-set to "60 fps" can record at 59.94 fps.
+### Akaso settings
+
+The menus differ between Akaso models. Set these if the camera has them:
+
+| Setting | Value | Reason |
+|---|---|---|
+| Stabilization (EIS, gyro, anti-shake) | **Off** | Stabilization moves the image |
+| Field of view | One fixed value. Use "Narrow" or "Medium" if the test area still fits | A narrower view has less fisheye distortion and more pixels on each tag |
+| Distortion correction | On or off, but the same every time | It changes the lens model |
+| Resolution, frame rate | 4K, 60 fps | The same as the GoPro |
+| Exposure, ISO, shutter | Manual and fast, if the camera allows it | Prevents smear |
+| Date stamp, watermark | Off | A stamp can cover a tag |
+
+Some low-cost cameras make 4K by enlarging a smaller image, or make 60 fps by repeating frames.
+Both are possible on an unknown Akaso model. Phase 2 checks this: the lens calibration error
+shows a soft image, and the detection step reports repeated (identical) frames. If the 4K60 mode
+fails the check, use the highest mode that passes.
+
+If the Akaso has no manual shutter, the robot tags smear when the robot moves fast in a dim
+hallway. Then use the Akaso for the stopped snapshots, and use the GoPro alone (2 tags or more)
+for the moving data. Add light to the test area if you can.
+
+**Lens model.** The tool now uses the OpenCV model with 5 distortion coefficients. This is good for
+the GoPro in Linear mode. A fisheye Akaso view (more than about 120°) needs the OpenCV fisheye
+model. Add it to `camera.py` in phase 2 if the Akaso calibration error is more than 0.5 px with
+the 5-coefficient model.
+
+### Hallway layout
+
+The hallway is a T junction. The hub is built on the outside corner where the two hallways meet.
+
+- Tags 24 and 21 are on the face that looks across the **16 ft (4.88 m)** hallway.
+- Tags 25 and 26 are on the face that looks across the **11 ft (3.35 m)** hallway (the one with
+  the mural).
+
+The test area is in front of **tag 24**, because only the 16 ft hallway has space for marks out
+to 4 m. Set `Test/Settings/Tag ID` and `questnav/Target Tag ID` to 24. The robot code does not
+need a change.
+
+```text
+                 far wall of the 16 ft hallway
+ [camera L]                                          [camera R]
+  2.3 m high,                                         2.3 m high,
+  2.1 m left of                                       2.1 m right of
+  the tag 24 line          test area                  the tag 24 line
+                       (marks 1 m to 4 m
+                        out from tag 24)              4.88 m (16 ft)
+                                                      from the hub face
+ ====================[21]=====[24]==+               +======
+               hub                  |[25]   [26]    |
+                                    |  11 ft hallway |
+                                    |   (mural)      |
+```
+
+Seen from the test area, facing tag 24: tag 21 is on your left, the corner is on your right, and
+tags 25 and 26 are around the corner on the right.
+
+| Item | Where |
+|---|---|
+| Tag 24 | Center 0.248 m (9.8 in) from the corner, 1.124 m (44.25 in) high |
+| Tag 21 | Same face, center 0.604 m (23.8 in) from the corner, 1.124 m high |
+| Tag 25 | Other face, center 0.248 m (9.8 in) from the corner, 1.124 m high |
+| Tag 26 | Other face, center 0.603 m (23.7 in) from the corner, 1.124 m high |
+| Test area | In front of tags 24 and 21, from 1 m to 4 m out. At 4 m, the bumper is about 0.44 m from the far wall |
+| Camera L | Against the far wall, 2.1 m (6.9 ft) left of the line straight out from tag 24. It sees 24 and 21 |
+| Camera R | Against the far wall, 2.1 m (6.9 ft) right of the same line, near the mouth of the 11 ft hallway. It sees 24, 21, 25 and 26 |
+| Floor tags 50 to 52 | Flat on the floor in the test area, for example at (1.7 m out, 0.8 m left), (1.7 m out, 0.8 m right) and (3.3 m out, on the line). See [Floor tags](#floor-tags) |
+
+From the center of the test area (2.5 m out), the two cameras are 90° apart. The synthetic scene
+in the tool tests uses this placement.
+
+What the headset sees:
+
+- Straight out from tag 24, the headset sees 24 and 21 only. The other face is edge-on. Two
+  tags are enough for QuestNav to align to the field (Phase 1), but not for its later
+  corrections, which need 3 tags.
+- Toward the corner (to the right of the tag 24 line), the headset sees both faces: up to 4 tags.
+
+### Floor tags
+
+Floor tags are three extra AprilTags (IDs 50, 51 and 52) printed and taped **flat on the floor**
+in the test area. Measure their positions one time per setup, from tag 24 with the laser. They do
+not move during a session.
+
+They are for the cameras only, not for QuestNav. The survey uses them to find the exact position
+and tilt of each GoPro:
+
+- The camera tilt (pitch) is the largest error source: 0.1° of pitch error moves truth about
+  1.3 cm at 3 m.
+- The hub tags are far from the cameras (about 5 m) and are all at one height, on one or two
+  walls. Camera L sees only 24 and 21, which are on one flat face. That fixes the tilt badly.
+- Floor tags are in the area where the robot drives, closer to the cameras, and on the floor
+  plane that truth is calculated on. They fix the tilt well.
+
+Without floor tags, the tool still works, but the truth error can be several centimeters. Leave
+the floor tags in place for the whole session; the robot can drive over flat paper tags. If the
+robot covers a tag in a frame, the survey uses the other frames.
 
 ### Camera placement
 
@@ -316,10 +434,9 @@ estimates. Phase 4 measures the real value.
 
 ## Open questions
 
-1. **GoPro model.** Which GoPro models does the team have? Linear lens mode and Protune
-   settings are different between models.
-2. **Hallway size.** Is there space for the GoPros 2 m to 4 m from the test area, 60° to 120°
-   apart?
-3. **Robot tags.** Is there space for a 165 mm tag at each bumper corner, at 45°?
-4. **QuestNav and unknown IDs.** Does the QuestNav beta ignore tag IDs that are not in the
-   field layout? Check this on the headset before the robot tags go on.
+1. **Akaso manual settings.** Does the Akaso have a manual shutter, and a field of view setting
+   (Wide, Medium, Narrow)? The model name, if you find it, answers both.
+2. **QuestNav and unknown IDs.** Does the QuestNav beta ignore tag IDs that are not in the
+   field layout (the floor tags)? Check this on the headset.
+3. **Robot tag size.** Are the robot tags the same size as the hub tags (165.1 mm black
+   square)? If not, the tool needs a separate size for the robot tags.
