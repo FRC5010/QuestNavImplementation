@@ -33,6 +33,9 @@ import frc.robot.subsystems.QuestNavSubsystem;
  *       at the tag. The pose change across the look is the drift the tag corrected.</li>
  *   <li>{@link #stopAtMarks()}: drives to marks in front of the tag and pauses at each one so a
  *       person can measure the bumper with a laser.</li>
+ *   <li>{@link #syncWiggle()}: turns left and right in place. The gyro log and the ground-truth
+ *       video both see it, so the laptop tool can align the video clocks with the robot clock.
+ *       Each routine also does it at its start and end, if the "Sync Wiggle" setting is on.</li>
  * </ul>
  *
  * <p>The robot steers with the fused drivetrain pose. Snapshots record the Quest pose and the
@@ -42,6 +45,16 @@ public class QuestNavTestRoutines {
     public static final String TURN_SWEEP = "TurnSweep";
     public static final String DRIFT = "Drift";
     public static final String MARKS = "Marks";
+    public static final String SYNC = "SyncWiggle";
+
+    /** True on the dashboard while a sync wiggle runs. The ground-truth tool finds the wiggles with it. */
+    public static final String SYNC_ACTIVE = "Test/Sync Wiggle Active";
+    /** Number of sync wiggles finished since the robot code started. */
+    public static final String SYNC_COUNT = "Test/Sync Wiggle Count";
+
+    /** Headings of the sync wiggle, relative to the heading at its start. */
+    static final double[] SYNC_OFFSETS_DEG = {30, -30, 30, -30, 0};
+    private static final double SYNC_STILL_S = 0.5;
 
     /** Angles from "headset faces the tag", in the order the turn sweep visits them. */
     static final double[] TURN_OFFSETS_DEG = {0, 15, 30, 45, 60, 0, -15, -30, -45, -60, 0};
@@ -100,6 +113,7 @@ public class QuestNavTestRoutines {
         Rotation2d[] anchor = {Rotation2d.kZero};
         List<Command> steps = new ArrayList<>();
         steps.add(logger.startRun(TURN_SWEEP));
+        steps.add(optionalSyncWiggle(TURN_SWEEP + " start"));
         steps.add(Commands.runOnce(() -> anchor[0] = headingFacingTag(drivetrain.getPose().getTranslation())));
         for (double offset : TURN_OFFSETS_DEG) {
             Supplier<Rotation2d> heading = () -> anchor[0].plus(Rotation2d.fromDegrees(offset));
@@ -107,6 +121,7 @@ public class QuestNavTestRoutines {
             steps.add(hold(heading, settings::settleSeconds));
             steps.add(logger.snapshot(String.format(Locale.US, "offset %+.0f deg", offset)));
         }
+        steps.add(optionalSyncWiggle(TURN_SWEEP + " end"));
         steps.add(Commands.runOnce(this::reportTurnSweep));
         return withEnd(Commands.sequence(steps.toArray(Command[]::new)), TURN_SWEEP);
     }
@@ -129,6 +144,7 @@ public class QuestNavTestRoutines {
 
         return withEnd(Commands.sequence(
                 logger.startRun(DRIFT),
+                optionalSyncWiggle(DRIFT + " start"),
                 Commands.runOnce(() -> {
                     start[0] = drivetrain.getPose();
                     toward[0] = headingFacingTag(start[0].getTranslation());
@@ -150,6 +166,7 @@ public class QuestNavTestRoutines {
                 turnTo(awayHeading),
                 hold(awayHeading, settings::settleSeconds),
                 logger.snapshot("after tag"),
+                optionalSyncWiggle(DRIFT + " end"),
                 Commands.runOnce(this::reportDrift)), DRIFT);
     }
 
@@ -157,6 +174,7 @@ public class QuestNavTestRoutines {
     public Command stopAtMarks() {
         List<Command> steps = new ArrayList<>();
         steps.add(logger.startRun(MARKS));
+        steps.add(optionalSyncWiggle(MARKS + " start"));
         for (double[] mark : MARKS_M) {
             double distance = mark[0];
             double lateral = mark[1];
@@ -171,7 +189,13 @@ public class QuestNavTestRoutines {
             steps.add(logger.status("Marks: measure at " + name + ", then press Y or set Test/Continue"));
             steps.add(waitForContinue(heading));
         }
+        steps.add(optionalSyncWiggle(MARKS + " end"));
         return withEnd(Commands.sequence(steps.toArray(Command[]::new)), MARKS);
+    }
+
+    /** Routine 0: one sync wiggle on its own. */
+    public Command syncWiggle() {
+        return withEnd(syncWiggleBody(SYNC), SYNC);
     }
 
     // ---------------------------------------------------------------- results
@@ -255,6 +279,41 @@ public class QuestNavTestRoutines {
     private Pose2d squareCorner(Pose2d center, Rotation2d heading, int signX, int signY) {
         double half = settings.driftSquareMeters() / 2;
         return new Pose2d(center.getTranslation().plus(new Translation2d(signX * half, signY * half)), heading);
+    }
+
+    /** A sync wiggle if the "Sync Wiggle" setting is on, else nothing. */
+    private Command optionalSyncWiggle(String label) {
+        return Commands.either(syncWiggleBody(label), Commands.none(), settings::syncWiggle);
+    }
+
+    /**
+     * Holds still, turns to each of {@link #SYNC_OFFSETS_DEG} from the start heading, and holds
+     * still again. {@link #SYNC_ACTIVE} is true for the whole wiggle, and the console gets a
+     * {@code SYNC_WIGGLE,begin|end,<label>,<FPGA time>} line at each end.
+     */
+    private Command syncWiggleBody(String label) {
+        Rotation2d[] anchor = {Rotation2d.kZero};
+        Supplier<Rotation2d> start = () -> anchor[0];
+        List<Command> steps = new ArrayList<>();
+        steps.add(Commands.runOnce(() -> {
+            anchor[0] = drivetrain.getPose().getRotation();
+            SmartDashboard.putBoolean(SYNC_ACTIVE, true);
+            System.out.printf(Locale.US, "SYNC_WIGGLE,begin,%s,%.6f%n", label, Timer.getFPGATimestamp());
+        }));
+        steps.add(logger.status("Sync wiggle: " + label));
+        steps.add(hold(start, () -> SYNC_STILL_S));
+        for (double offset : SYNC_OFFSETS_DEG) {
+            steps.add(turnTo(() -> anchor[0].plus(Rotation2d.fromDegrees(offset))));
+        }
+        steps.add(hold(start, () -> SYNC_STILL_S));
+        return Commands.sequence(steps.toArray(Command[]::new))
+                .finallyDo(interrupted -> {
+                    SmartDashboard.putBoolean(SYNC_ACTIVE, false);
+                    System.out.printf(Locale.US, "SYNC_WIGGLE,end,%s,%.6f%n", label, Timer.getFPGATimestamp());
+                    if (!interrupted) {
+                        SmartDashboard.putNumber(SYNC_COUNT, SmartDashboard.getNumber(SYNC_COUNT, 0) + 1);
+                    }
+                });
     }
 
     /** Turns in place to a field heading. Ends when on target and nearly stopped. */

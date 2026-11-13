@@ -1,0 +1,17 @@
+{
+  "_comment": "Measurements for one hallway setup. Copy to setup.json and replace the values with your measurements. Positions in meters, angles in degrees.",
+  "tag_size_m": 0.1651,
+  "reference_tag": 25,
+  "hub_tag_ids": [25, 26, 24],
+  "robot_tags": [
+    {"id": 40, "x": 0.40, "y": 0.40, "z": 0.30, "yaw_deg": 45},
+    {"id": 41, "x": 0.40, "y": -0.40, "z": 0.30, "yaw_deg": -45},
+    {"id": 42, "x": -0.40, "y": -0.40, "z": 0.30, "yaw_deg": -135},
+    {"id": 43, "x": -0.40, "y": 0.40, "z": 0.30, "yaw_deg": 135}
+  ],
+  "floor_tags": [
+    {"id": 50, "distance": 1.7, "lateral": -0.8, "top_yaw_deg": 0},
+    {"id": 51, "distance": 1.7, "lateral": 0.8, "top_yaw_deg": 90},
+    {"id": 52, "distance": 3.3, "lateral": 0.0, "top_yaw_deg": 180}
+  ]
+}

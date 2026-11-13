@@ -14,11 +14,18 @@ import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.networktables.DoubleArraySubscriber;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.RobotContainer;
+import frc.robot.Telemetry;
+import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.QuestNavSim;
 
 /**
@@ -57,6 +64,7 @@ class QuestNavTestRoutinesTest {
         SmartDashboard.putNumber(TestSettings.BUMPER_LENGTH, 0.88);
         SmartDashboard.putNumber(TestSettings.BUMPER_WIDTH, 0.88);
         SmartDashboard.putBoolean(TestSettings.MARKS_FRONT_FACES_TAG, false);
+        SmartDashboard.putBoolean(TestSettings.SYNC_WIGGLE, false);
         tag = TagFrame.tagPose(25).orElseThrow();
 
         DriverStationSim.setAutonomous(false);
@@ -112,8 +120,14 @@ class QuestNavTestRoutinesTest {
     void turnSweepWithACorrectMountReportsNoShift() throws InterruptedException {
         useCorrectMount();
         startInFrontOfTag(2.0);
+        // Also covers the optional sync wiggles at the start and end of a routine.
+        SmartDashboard.putBoolean(TestSettings.SYNC_WIGGLE, true);
+        double wigglesBefore = SmartDashboard.getNumber(QuestNavTestRoutines.SYNC_COUNT, 0);
 
-        runToEnd(routines.turnSweep(), 60, false);
+        runToEnd(routines.turnSweep(), 90, false);
+
+        assertEquals(wigglesBefore + 2, SmartDashboard.getNumber(QuestNavTestRoutines.SYNC_COUNT, 0),
+                "the routine should start and end with a sync wiggle");
 
         List<TestSnapshotLogger.Snapshot> run = routines.logger().currentRun();
         assertEquals(QuestNavTestRoutines.TURN_OFFSETS_DEG.length, run.size());
@@ -127,7 +141,9 @@ class QuestNavTestRoutinesTest {
 
     @Test
     void turnSweepShowsAWrongMount() throws InterruptedException {
-        // The simulated headset stays at its own mount, about 0.3 m from where the code assumes.
+        // The simulated headset is mounted 0.3 m from where the code assumes.
+        sim.setMountTransform(container.questNavSubsystem.getRobotToQuest()
+                .plus(new Transform3d(0.3, 0, 0, Rotation3d.kZero)));
         startInFrontOfTag(2.0);
 
         runToEnd(routines.turnSweep(), 60, false);
@@ -193,5 +209,49 @@ class QuestNavTestRoutinesTest {
                 assertEquals(r.leftCorner(), r.rightCorner(), 0.03, "bumper should be square to the tag at mark " + i);
             }
         }
+    }
+
+    @Test
+    void syncWiggleTurnsBothWaysAndLogsTheGroundTruthTopics() throws InterruptedException {
+        useCorrectMount();
+        startInFrontOfTag(2.0);
+        NetworkTableInstance nt = NetworkTableInstance.getDefault();
+        DoubleArraySubscriber frames = nt.getDoubleArrayTopic(QuestNavSubsystem.FRAME_TOPIC).subscribe(new double[0]);
+        DoubleSubscriber rawHeading = nt.getDoubleTopic(Telemetry.RAW_HEADING_TOPIC).subscribe(Double.NaN);
+        double startDeg = container.drivetrain.getPose().getRotation().getDegrees();
+        double wigglesBefore = SmartDashboard.getNumber(QuestNavTestRoutines.SYNC_COUNT, 0);
+
+        Command wiggle = routines.syncWiggle();
+        CommandScheduler.getInstance().schedule(wiggle);
+        double min = 0;
+        double max = 0;
+        boolean sawActive = false;
+        long end = System.nanoTime() + 30_000_000_000L;
+        while (CommandScheduler.getInstance().isScheduled(wiggle) && System.nanoTime() < end) {
+            CommandScheduler.getInstance().run();
+            double turned = container.drivetrain.getPose().getRotation().minus(Rotation2d.fromDegrees(startDeg)).getDegrees();
+            min = Math.min(min, turned);
+            max = Math.max(max, turned);
+            sawActive |= SmartDashboard.getBoolean(QuestNavTestRoutines.SYNC_ACTIVE, false);
+            Thread.sleep(20);
+        }
+
+        assertFalse(CommandScheduler.getInstance().isScheduled(wiggle), "the wiggle did not finish in time");
+        assertTrue(sawActive, "Sync Wiggle Active should be true during the wiggle");
+        assertFalse(SmartDashboard.getBoolean(QuestNavTestRoutines.SYNC_ACTIVE, true), "and false after it");
+        assertEquals(wigglesBefore + 1, SmartDashboard.getNumber(QuestNavTestRoutines.SYNC_COUNT, 0));
+        assertEquals(30, max, 3, "should turn about +30 deg");
+        assertEquals(-30, min, 3, "should turn about -30 deg");
+        double endTurn = container.drivetrain.getPose().getRotation().minus(Rotation2d.fromDegrees(startDeg)).getDegrees();
+        assertEquals(0, endTurn, 2, "should end at the start heading");
+
+        double[] frame = frames.get();
+        assertEquals(4, frame.length, "Quest frames should be logged as [t, x, y, deg]");
+        Pose2d pose = container.drivetrain.getPose();
+        assertEquals(pose.getX(), frame[1], 0.05);
+        assertEquals(pose.getY(), frame[2], 0.05);
+        assertTrue(Double.isFinite(rawHeading.get()), "the raw gyro heading should be published");
+        frames.close();
+        rawHeading.close();
     }
 }

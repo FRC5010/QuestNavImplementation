@@ -61,6 +61,7 @@ public class RobotContainer {
 
     private void configureTestRoutines() {
         testChooser.setDefaultOption("None", Commands.none());
+        testChooser.addOption("0. Sync Wiggle", testRoutines.syncWiggle());
         testChooser.addOption("1. Turn Sweep", testRoutines.turnSweep());
         testChooser.addOption("2. Drift Loop", testRoutines.driftLoop());
         testChooser.addOption("3. Stop At Marks", testRoutines.stopAtMarks());

@@ -50,6 +50,9 @@ public class Telemetry {
     private final StructArrayPublisher<SwerveModulePosition> driveModulePositions = driveStateTable.getStructArrayTopic("ModulePositions", SwerveModulePosition.struct).publish();
     private final DoublePublisher driveTimestamp = driveStateTable.getDoubleTopic("Timestamp").publish();
     private final DoublePublisher driveOdometryFrequency = driveStateTable.getDoubleTopic("OdometryFrequency").publish();
+    /** Raw gyro heading (deg, wrapped to +-180). The ground-truth tool uses it to sync the video clocks. */
+    public static final String RAW_HEADING_TOPIC = "/DriveState/RawHeading (deg)";
+    private final DoublePublisher driveRawHeading = inst.getDoubleTopic(RAW_HEADING_TOPIC).publish();
 
     /* Robot pose for field positioning */
     private final NetworkTable table = inst.getTable("Pose");
@@ -94,6 +97,7 @@ public class Telemetry {
         driveModulePositions.set(state.ModulePositions);
         driveTimestamp.set(state.Timestamp);
         driveOdometryFrequency.set(1.0 / state.OdometryPeriod);
+        driveRawHeading.set(state.RawHeading.getDegrees());
 
         /* Also write to log file */
         SignalLogger.writeStruct("DriveState/Pose", Pose2d.struct, state.Pose);

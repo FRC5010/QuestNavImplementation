@@ -16,6 +16,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
@@ -47,6 +49,15 @@ public class QuestNavSubsystem extends SubsystemBase {
     private static final int DEFAULT_TARGET_TAG_ID = 25;
     private int _calculatedOffsetToRobotCenterCount = 0;
     private String networkTableRoot = "questnav";
+
+    /**
+     * Each tracking frame as {@code [dataTimestamp (s), x (m), y (m), heading (deg)]}: the raw robot
+     * pose (no soft reset) at the headset's capture time. The .wpilog records every frame; the
+     * ground-truth tool (tools/groundtruth) compares truth with it.
+     */
+    public static final String FRAME_TOPIC = "/QuestNavLog/Frame";
+    private final DoubleArrayPublisher framePublisher =
+            NetworkTableInstance.getDefault().getDoubleArrayTopic(FRAME_TOPIC).publish();
 
     // Simulated headset; only exists in simulation.
     private QuestNavSim sim = null;
@@ -111,6 +122,9 @@ public class QuestNavSubsystem extends SubsystemBase {
                         robotPose.getX(), robotPose.getY(), robotPose.getZ(),
                         robotPose.getRotation().getX(), robotPose.getRotation().getY(),
                         robotPose.getRotation().getZ() });
+                framePublisher.set(new double[] {
+                        timestamp, robotPose.getX(), robotPose.getY(),
+                        Math.toDegrees(robotPose.getRotation().getZ()) });
                 drivetrain.addVisionMeasurement(robotPose.toPose2d(), timestamp, QUESTNAV_STD_DEVS);
             }
         }

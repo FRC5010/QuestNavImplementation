@@ -18,6 +18,7 @@ public class TestSettings {
     static final String BUMPER_LENGTH = ROOT + "Bumper Length (m)";
     static final String BUMPER_WIDTH = ROOT + "Bumper Width (m)";
     static final String MARKS_FRONT_FACES_TAG = ROOT + "Marks: Front Faces Tag";
+    static final String SYNC_WIGGLE = ROOT + "Sync Wiggle";
 
     /** Set to true on the dashboard (or press Y) to continue after a measurement pause. */
     public static final String CONTINUE = "Test/Continue";
@@ -34,7 +35,13 @@ public class TestSettings {
         SmartDashboard.setDefaultNumber(BUMPER_WIDTH, 0.88);
         // false: the headset faces the tag at each mark. true: the front bumper faces the tag.
         SmartDashboard.setDefaultBoolean(MARKS_FRONT_FACES_TAG, false);
+        // true: each routine starts and ends with a sync wiggle, for the ground-truth video sync.
+        SmartDashboard.setDefaultBoolean(SYNC_WIGGLE, true);
         SmartDashboard.putBoolean(CONTINUE, false);
+    }
+
+    public boolean syncWiggle() {
+        return SmartDashboard.getBoolean(SYNC_WIGGLE, true);
     }
 
     public int tagId() {

@@ -8,6 +8,7 @@ drives the robot the same way every time and records labeled snapshots of the po
 | 1. Turn Sweep | Position and heading error when the robot turns in place | No |
 | 2. Drift Loop | Drift with the tag out of view, and the correction when the tag comes back | No |
 | 3. Stop At Marks | Accuracy at known points in front of the tag | Yes, a laser or tape at each mark |
+| 0. Sync Wiggle | Nothing. It aligns the GoPro video clocks with the robot clock | No |
 
 Do the [floor setup](test-setup.md) and the [offset calibration](questnav-offset-calibration.md)
 before you use these routines.
@@ -119,6 +120,19 @@ robot, so the **right** bumper faces the tag. At marks 5 and 6 the robot is at a
 tag, so the two corner distances are different. To make the front bumper face the tag, set
 `Test/Settings/Marks: Front Faces Tag` to true. Then the headset cannot see the tag.
 
+## Sync wiggle
+
+The sync wiggle is for the ground-truth video (see [the ground-truth design](ground-truth-design.md)).
+The robot holds still for 0.5 s, turns to +30°, −30°, +30°, −30° and 0° from its start heading,
+and holds still for 0.5 s again. It takes about 7 s.
+
+Each routine does a sync wiggle at its start and at its end if `Test/Settings/Sync Wiggle` is
+true (the default). Set it to false if you do not record video. To do one wiggle on its own,
+select "0. Sync Wiggle" in the `Test Routine` chooser.
+
+`Test/Sync Wiggle Active` is true during each wiggle, and `Test/Sync Wiggle Count` counts the
+finished wiggles.
+
 ## Where the data goes
 
 Each snapshot goes to three places:
@@ -174,3 +188,4 @@ All settings are under `Test/Settings/` on the dashboard.
 | `Bumper Length (m)` | 0.88 | Outside length with bumpers. Measure your robot |
 | `Bumper Width (m)` | 0.88 | Outside width with bumpers. Measure your robot |
 | `Marks: Front Faces Tag` | false | Routine 3 only |
+| `Sync Wiggle` | true | A sync wiggle at the start and end of each routine |
