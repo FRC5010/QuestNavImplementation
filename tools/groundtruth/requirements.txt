@@ -2,3 +2,5 @@ numpy>=1.26
 scipy>=1.11
 opencv-python>=4.10
 pytest>=8
+robotpy-wpiutil>=2026.1
+matplotlib>=3.8

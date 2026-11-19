@@ -110,8 +110,18 @@ def sync_clock(video_t, video_heading_deg, robot_t, gyro_heading_deg,
     events = []
     for r0, r1 in robot_windows:
         window = (r0 - coarse, r1 - coarse)
-        shift, rms, n = fine_shift(video_t, video_heading_deg, robot_t, gyro_heading_deg, window, coarse)
+        try:
+            shift, rms, n = fine_shift(video_t, video_heading_deg, robot_t, gyro_heading_deg, window, coarse)
+        except ValueError:
+            continue  # this wiggle is not in the video (the camera was not recording, or the robot was out of view)
         events.append(SyncEvent((r0, r1), 0.5 * (window[0] + window[1]), shift, rms, n))
+    if not events:
+        raise ValueError("none of the sync wiggles in the log are in the video")
+    # Drop wiggles that fit badly (the robot was out of view, or a wrong match), if good ones remain.
+    rms = np.array([e.rms_deg for e in events])
+    good = rms <= max(3 * np.median(rms), 2.0)
+    if good.sum() >= 1 and not good.all():
+        events = [e for e, g in zip(events, good) if g]
 
     centers = np.array([e.video_center for e in events])
     robot_times = centers + np.array([e.shift for e in events])

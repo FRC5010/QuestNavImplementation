@@ -18,7 +18,8 @@ class Lens:
     fy: float
     cx: float
     cy: float
-    dist: np.ndarray = field(default_factory=lambda: np.zeros(5))  # k1, k2, p1, p2, k3
+    # k1, k2, p1, p2, k3 (standard model), or those plus k4, k5, k6 (OpenCV rational model).
+    dist: np.ndarray = field(default_factory=lambda: np.zeros(5))
     width: int = 0
     height: int = 0
 
@@ -28,10 +29,12 @@ class Lens:
 
     def distort(self, normalized: np.ndarray) -> np.ndarray:
         """Normalized image coordinates (x/z, y/z), shape (N, 2), to pixels."""
-        k1, k2, p1, p2, k3 = self.dist
+        d = np.zeros(8)
+        d[: len(self.dist)] = self.dist
+        k1, k2, p1, p2, k3, k4, k5, k6 = d
         x, y = normalized[:, 0], normalized[:, 1]
         r2 = x * x + y * y
-        radial = 1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2
+        radial = (1 + k1 * r2 + k2 * r2 * r2 + k3 * r2 * r2 * r2) / (1 + k4 * r2 + k5 * r2 * r2 + k6 * r2 * r2 * r2)
         xd = x * radial + 2 * p1 * x * y + p2 * (r2 + 2 * x * x)
         yd = y * radial + p1 * (r2 + 2 * y * y) + 2 * p2 * x * y
         return np.column_stack([self.fx * xd + self.cx, self.fy * yd + self.cy])
@@ -66,9 +69,9 @@ class Lens:
     @staticmethod
     def from_dict(d: dict) -> "Lens":
         k = np.asarray(d["camera_matrix"], dtype=float)
-        dist = np.zeros(5)
         coeffs = np.asarray(d["dist_coeffs"], dtype=float).ravel()
-        dist[: min(5, coeffs.size)] = coeffs[:5]
+        dist = np.zeros(8 if coeffs.size > 5 else 5)
+        dist[: min(dist.size, coeffs.size)] = coeffs[: dist.size]
         return Lens(k[0, 0], k[1, 1], k[0, 2], k[1, 2], dist, int(d.get("width", 0)), int(d.get("height", 0)))
 
     @staticmethod

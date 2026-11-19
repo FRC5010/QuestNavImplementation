@@ -70,6 +70,10 @@ class Limits:
     max_rms_px: float = 1.0
     max_sigma_m: float = 0.015
     noise_floor_px: float = 0.2
+    # One tag in one camera: its 4 corners fix the planar pose, but there is no second tag to check
+    # it, so the uncertainty limits are tighter.
+    single_tag_max_sigma_m: float = 0.008
+    single_tag_max_sigma_deg: float = 1.0
 
 
 def solve_robot_pose(
@@ -122,8 +126,9 @@ def solve_robot_pose(
     n_cameras = len({o.camera.name for o in obs})
     solution = Solution(float(x), float(y), wrap_angle(float(theta)), cov, rms, len(obs), n_tags, n_cameras, True)
 
-    if len(obs) < 2:
-        solution.accepted, solution.reason = False, "only one tag in one camera"
+    if len(obs) < 2 and (solution.sigma_position_m > limits.single_tag_max_sigma_m
+                         or np.degrees(solution.sigma_theta_rad) > limits.single_tag_max_sigma_deg):
+        solution.accepted, solution.reason = False, "only one tag in one camera, and its uncertainty is too large"
     elif rms > limits.max_rms_px:
         solution.accepted, solution.reason = False, f"RMS {rms:.2f} px is more than {limits.max_rms_px} px"
     elif solution.sigma_position_m > limits.max_sigma_m:

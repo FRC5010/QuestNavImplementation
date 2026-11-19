@@ -69,11 +69,20 @@ class FloorTag:
 @dataclass
 class Setup:
     tag_size: float = FRC_TAG_SIZE_M
+    robot_tag_size: float | None = None  # black-square size of the robot tags if not tag_size
+    rough: bool = False  # True if the measurements are estimates (the report then warns)
+    notes: str = ""
     reference_tag: int = 24
     hub_tag_ids: list[int] = field(default_factory=lambda: [24, 21, 25, 26])
     robot_tags: dict[int, RobotTag] = field(default_factory=dict)
     floor_tags: dict[int, FloorTag] = field(default_factory=dict)
+    # Hub tags that are not at their layout position: id -> field_from_tag (upright tag).
+    tag_overrides: dict[int, Pose3] = field(default_factory=dict)
     layout: dict[int, Pose3] = field(default_factory=load_field_layout)
+
+    @property
+    def robot_size(self) -> float:
+        return self.robot_tag_size or self.tag_size
 
     def robot_tag_poses(self) -> dict[int, Pose3]:
         """robot_from_tag for each robot tag."""
@@ -81,7 +90,7 @@ class Setup:
 
     def static_tag_poses(self) -> dict[int, Pose3]:
         """field_from_tag for each tag that does not move: the hub tags and the floor tags."""
-        poses = {i: self.layout[i] for i in self.hub_tag_ids}
+        poses = {i: self.tag_overrides.get(i, self.layout[i]) for i in self.hub_tag_ids}
         reference = self.layout[self.reference_tag]
         poses.update({i: t.field_from_tag(reference) for i, t in self.floor_tags.items()})
         return poses
@@ -91,6 +100,9 @@ class Setup:
         layout = load_field_layout(d["layout"]) if "layout" in d else load_field_layout()
         return Setup(
             tag_size=float(d.get("tag_size_m", FRC_TAG_SIZE_M)),
+            robot_tag_size=float(d["robot_tag_size_m"]) if "robot_tag_size_m" in d else None,
+            rough=bool(d.get("rough", False)),
+            notes=str(d.get("notes", d.get("_comment", ""))),
             reference_tag=int(d.get("reference_tag", 24)),
             hub_tag_ids=[int(i) for i in d.get("hub_tag_ids", [24, 21, 25, 26])],
             robot_tags={int(t["id"]): RobotTag(int(t["id"]), t["x"], t["y"], t["z"], t["yaw_deg"])
@@ -99,6 +111,8 @@ class Setup:
                                                t.get("top_yaw_deg", 0.0), t.get("z", 0.0))
                         for t in d.get("floor_tags", [])},
             layout=layout,
+            tag_overrides={int(t["id"]): Pose3(rot_z(np.radians(t["yaw_deg"])), np.array([t["x"], t["y"], t["z"]]))
+                           for t in d.get("tag_overrides", [])},
         )
 
     @staticmethod

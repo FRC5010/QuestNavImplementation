@@ -1,8 +1,17 @@
 # Ground truth from GoPro video: design
 
-Status: phase 1 is built (robot logging, sync wiggle, and the tool's solver, survey and sync,
-in `tools/groundtruth/`). Phases 2 to 4 are not built. Coordinates in this document use the 2026 field frame, because the
-robot code uses it (see the 2026 frame note in the testing guide).
+Status: the pipeline is built and runs on real sessions (`tools/groundtruth/`, see its README).
+First results (2026-11-19, GoPro only, rough setup):
+
+| Session | QuestNav | Aligned position error | Aligned heading error |
+|---|---|---|---|
+| Run 1 (Turn Sweep, in place) | Aligned to the field | 0.4 cm RMS, max 1.5 cm | 0.7° RMS |
+| Run 2 (Turn Sweep and Drift Loop) | Not aligned to the field | 1.8 cm RMS; Drift Loop 4.4 cm RMS, max 9.3 cm | 0.8° RMS |
+
+Absolute (field-frame) errors are not valid yet: in run 1 tag 24 was out of position (QuestNav
+anchored to it; absolute offset about 30 cm), and in run 2 QuestNav never aligned to the field
+(tag 24 was at tag 21's position, 0.596 m from the corner, measured from video). The robot tag
+mounts are fitted from video; measured mounts and a passing Akaso calibration are still needed.
 
 ## Goal
 

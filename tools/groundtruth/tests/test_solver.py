@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from groundtruth.geometry import wrap_angle
-from groundtruth.solver import solve_robot_pose
+from groundtruth.solver import Limits, solve_robot_pose
 from synthetic import make_cameras, make_setup, observe_robot, robot_pose_in_area
 
 SETUP = make_setup()
@@ -73,12 +73,15 @@ def test_motion_between_camera_frames_is_corrected_by_delta():
     assert error(without, truth)[0] > 1e-3
 
 
-def test_one_tag_in_one_camera_is_not_accepted():
+def test_one_tag_in_one_camera_needs_a_small_uncertainty():
     truth = robot_pose_in_area(SETUP, 2.0, 0.0, 0.0)
     obs = observe_robot(CAMERAS, SETUP, truth)[:1]
     sol = solve_robot_pose(obs, ROBOT_TAGS, SETUP.tag_size)
-    assert not sol.accepted
-    assert "one tag" in sol.reason
+    assert sol.accepted, sol.reason  # the floor plane makes one tag's 4 corners enough
+    assert error(sol, truth)[0] < 1e-3
+    strict = Limits(single_tag_max_sigma_m=1e-6)
+    sol = solve_robot_pose(obs, ROBOT_TAGS, SETUP.tag_size, limits=strict)
+    assert not sol.accepted and "one tag" in sol.reason
 
 
 def test_bad_corners_are_not_accepted():

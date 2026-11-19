@@ -14,6 +14,18 @@ def test_distort_matches_opencv():
     assert np.abs(ours - expected.reshape(-1, 2)).max() < 1e-6
 
 
+def test_rational_model_matches_opencv_and_round_trips():
+    from groundtruth.camera import Lens
+    lens = Lens(900.0, 900.0, 960.0, 540.0, np.array([0.2, -0.05, 0.001, -0.0005, 0.01, 0.45, -0.02, 0.005]), 1920, 1080)
+    rng = np.random.default_rng(3)
+    points = np.column_stack([rng.uniform(-1.5, 1.5, 50), rng.uniform(-1, 1, 50), rng.uniform(1, 4, 50)])
+    expected, _ = cv2.projectPoints(points, np.zeros(3), np.zeros(3), lens.K, lens.dist)
+    ours = lens.distort(points[:, :2] / points[:, 2:])
+    assert np.abs(ours - expected.reshape(-1, 2)).max() < 1e-6
+    assert np.abs(lens.undistort(ours) - points[:, :2] / points[:, 2:]).max() < 1e-9
+    assert Lens.from_dict(lens.to_dict()).dist.size == 8
+
+
 def test_undistort_round_trip():
     rng = np.random.default_rng(2)
     normalized = np.column_stack([rng.uniform(-0.8, 0.8, 100), rng.uniform(-0.45, 0.45, 100)])
@@ -59,3 +71,20 @@ def test_synthetic_scene_sees_the_tags_it_needs():
     for cam in make_cameras(setup):
         seen = [i for i, pose in static.items() if visible_corners(cam, pose, setup.tag_size) is not None]
         assert len(seen) >= 4, f"camera {cam.name} sees only {seen}"
+
+
+def test_detected_apriltag_corners_are_in_aruco_order():
+    """An upright printed FRC tag is detected as top-left, top-right, bottom-right, bottom-left.
+
+    The official AprilTag images (the FRC prints) are OpenCV's 36h11 images turned 180 degrees; this
+    was measured on the hallway tags in run 1 (OpenCV gives their corners bottom-right first)."""
+    from groundtruth.detect import detect_image, make_detector
+    opencv_image = cv2.aruco.generateImageMarker(cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11), 25, 200)
+    tag = np.rot90(opencv_image, 2)  # as printed for FRC
+    img = np.full((400, 400), 255, np.uint8)
+    img[100:300, 100:300] = tag
+    (tag_id, c), = detect_image(make_detector(), img)
+    assert tag_id == 25
+    tl, tr, br, bl = c
+    assert tl[0] < tr[0] and bl[0] < br[0] and tl[1] < bl[1] and tr[1] < br[1], c
+    assert np.allclose(tl, [100, 100], atol=2) and np.allclose(br, [300, 300], atol=2), c

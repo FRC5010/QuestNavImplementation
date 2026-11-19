@@ -3,7 +3,8 @@
 Do these steps in order before a test session. Each step has a check. Do not go to the next step
 until the check passes.
 
-Team 5010. roboRIO: `10.50.10.2`. Headset: usually `10.50.10.203`.
+Team 5010. roboRIO: `10.50.10.2`. Headset: a `10.50.10.2xx` address that can change (it was
+`.203`, then `.200`). Find it with the scan in [Problems](#problems).
 
 ## 1. The night before
 
@@ -47,10 +48,18 @@ The Mac uses the robot Wi-Fi for the robot and the iPhone cable for the internet
 
 ## 5. Headset
 
-- [ ] Put on the headset. If QuestNav is not open, open it: **App Library → Unknown Sources →
-      QuestNav**.
+- [ ] Put on the headset. In **Quick Settings**, **Airplane mode** is **on**. This keeps Wi-Fi
+      off. The Ethernet adapter still works. (If Wi-Fi is on, the headset is on two networks and
+      does not connect to the robot.)
+- [ ] If QuestNav is not open, open it: **App Library → Unknown Sources → QuestNav**.
 - [ ] Take off the headset and put it on the robot.
-- [ ] Run this on the Mac:
+- [ ] Find the headset address on the Mac:
+
+```bash
+for i in $(seq 200 220); do curl -4 -s -m 0.5 "http://10.50.10.$i:5801/api/status" >/dev/null && echo "QuestNav at 10.50.10.$i"; done
+```
+
+- [ ] Get its status. Use the address from the scan in place of `10.50.10.203` here and below:
 
 ```bash
 curl -4 -s http://10.50.10.203:5801/api/status
@@ -60,6 +69,7 @@ Check these values in the answer:
 
 | Value | Must be |
 |---|---|
+| `ipAddress` | The same `10.50.10.2xx` address that the scan found |
 | `teamNumber` | `5010` |
 | `robotIpAddress` | `10.50.10.2` |
 | `networkConnected` | `true` |
@@ -106,10 +116,10 @@ tags, and wait again.
 |---|---|
 | `curl` gets no answer | Add `-4`. Make sure that the Mac is on the robot Wi-Fi |
 | `curl -4` gets no answer | Restart QuestNav: `curl -4 -X POST http://10.50.10.203:5801/api/restart`. If that gets no answer too, close and open QuestNav on the headset |
-| The headset is not at `10.50.10.203` | Find it: `for i in $(seq 200 220); do curl -4 -s -m 0.4 "http://10.50.10.$i:5801/api/status" >/dev/null && echo "QuestNav at 10.50.10.$i"; done` |
 | `teamNumber` stays 9999 after the POST | The body must be `{"teamNumber":5010}`. The `path`/`value` example in the QuestNav docs does not work in this version |
 | QuestNav is not in the app list | **App Library → filter (top right) → Unknown Sources** |
 | The team number field in the QuestNav web page cannot be clicked | Use the `curl -4 -X POST` command in step 5 |
-| `networkConnected` is false | Check the headset Ethernet adapter, its power and its cable. Make sure that the robot is on |
+| The QuestNav menu shows two IP addresses that change back and forth, or `ipAddress` is not `10.50.10.x` | The headset Wi-Fi is on. Turn on **Airplane mode** in the headset Quick Settings (turning off only Wi-Fi did not stay off), then restart QuestNav |
+| `networkConnected` is false | First make sure that the headset Wi-Fi is off. Then check the headset Ethernet adapter, its power and its cable. Make sure that the robot is on |
 | `isTracking` is false | Turn on the lights. Make sure that nothing covers the headset cameras |
 | `fps` is about 50 | Known with AprilTag detection on in this beta. Not a blocker |
