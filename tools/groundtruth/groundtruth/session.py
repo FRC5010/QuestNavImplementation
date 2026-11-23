@@ -39,7 +39,7 @@ from .robotlog import RobotLog, read_log
 from .solver import Limits, Observation, solve_robot_pose
 from .survey import StaticObservation, SurveyResult, survey_camera
 from .sync import ClockFit, sync_clock
-from .mounts import MountFit, fit_mounts, heading_track
+from .mounts import MountFit, fit_mounts, heading_track, refine_mounts
 import copy
 
 MATCH_S = 0.05  # largest gap to the nearest Quest frame when matching a truth sample
@@ -328,8 +328,10 @@ def compare(truth: Track, log: RobotLog, heading_fix: str = "auto") -> Compariso
     # positions (for example a turn sweep in place), use the headings for the rotation.
     phi, shift, method = 0.0, np.zeros(2), "none"
     if q_ok.sum() >= 3:
-        extent = np.percentile(np.linalg.norm(T[q_ok, :2] - np.median(T[q_ok, :2], axis=0), axis=1), 99)
-        if extent >= 0.25:
+        # Positions fix the rotation when enough samples are away from the middle of the path. A
+        # count, not a percentile: most of a session is spent turning in place.
+        far = np.linalg.norm(T[q_ok, :2] - np.median(T[q_ok, :2], axis=0), axis=1) > 0.25
+        if far.sum() >= 30:
             phi, shift = rigid_fit(Q[q_ok, :2], T[q_ok, :2])
             method = "positions"
         else:
@@ -468,6 +470,10 @@ def write_report(out: Path, setup: Setup, log: RobotLog, cams: list[CameraResult
             L.append(f"| {j} | {fa} | {fb} |")
         for c in fits:
             f = c.mount_fit
+            if "refine" in f.stats:
+                ri = f.stats["refine"]
+                L.append(f"\n{c.name}: tags {ri['refined']} refined from {ri['frames']} session frames with 2+ robot tags, "
+                         f"RMS {ri['rms_px']:.2f} px.")
             L.append(f"\n{c.name}: fit RMS {f.rms_px:.2f} px over {f.frames} frames, reference tag {f.reference_tag}, "
                      f"observations {f.observations}, per tag RMS "
                      + ", ".join(f"{j}: {v:.2f} px" for j, v in f.stats["per_tag_rms_px"].items()))
@@ -633,6 +639,17 @@ def run(log_path: str, setup: Setup, cameras: list[tuple[str, str, str]], out: s
                 used.robot_tags[j] = best.tags[j]
             elif any(j in (f.rejected or {}) for f in fits):
                 del used.robot_tags[j]
+        # Refine the other tags from every frame of the session with 2+ robot tags, keeping the
+        # best-fitted tag fixed (it sets the robot origin and heading zero).
+        if fits:
+            main = max(fits, key=lambda f: f.observations[f.reference_tag])
+            cam = next(r for r in strong if r.mount_fit is main)
+            refined, info = refine_mounts(dets[cam.name], cam.camera, used, main.reference_tag)
+            if info.get("refined"):
+                used.robot_tags.update({j: refined[j] for j in info["refined"]})
+                main.stats["refine"] = info
+                progress(f"{cam.name}: refined mounts of tags {info['refined']} from {info['frames']} frames, "
+                         f"RMS {info['rms_px']:.2f} px, per tag {info['per_tag_rms_px']}")
 
     # 3. Truth for the strong cameras, then a second, finer clock sync from the full truth heading.
     def truth_and_sync(r):

@@ -295,3 +295,90 @@ def fit_mounts(det: TagDetections, camera: Camera, setup: Setup, video_windows: 
                     {"per_tag_rms_px": per_tag, "converged": bool(result.success), "message": result.message,
                      "max_center_drift_m": drift, "knots": int(len(knot_t))},
                     rejected)
+
+
+def refine_mounts(det: TagDetections, camera: Camera, setup: Setup, fixed_tag: int, max_frames: int = 800,
+                  min_pairs: int = 20) -> tuple[dict[int, RobotTag], dict]:
+    """Refine the other robot tags' mounts from every frame of the session where 2+ robot tags are
+    visible together. Each frame's robot pose is free; ``fixed_tag`` keeps its mount (from
+    :func:`fit_mounts`), so it still sets the robot origin and heading zero."""
+    robot = setup.robot_tag_poses()
+    m = np.isin(det.tag_id, list(robot))
+    t_all = det.time[m]
+    times, counts = np.unique(t_all, return_counts=True)
+    multi = times[counts >= 2]
+    # Keep frames that include the fixed tag or connect to it through others; sample evenly.
+    if len(multi) > max_frames:
+        multi = multi[np.linspace(0, len(multi) - 1, max_frames).astype(int)]
+    sel = m & np.isin(det.time, multi)
+    obs_t, obs_id, obs_c = det.time[sel], det.tag_id[sel], det.corners[sel]
+    tags = sorted(set(int(i) for i in obs_id))
+    pair_counts = {j: int(np.sum(obs_id == j)) for j in tags}
+    free = [j for j in tags if j != fixed_tag and pair_counts[j] >= min_pairs]
+    if fixed_tag not in tags or not free:
+        return dict(setup.robot_tags), {"refined": [], "pairs": pair_counts}
+    keep = np.isin(obs_id, [fixed_tag] + free)
+    obs_t, obs_id, obs_c = obs_t[keep], obs_id[keep], obs_c[keep]
+    frames = np.unique(obs_t)
+    fidx = {t: k for k, t in enumerate(frames)}
+    size = setup.robot_size
+    local = tag_corners(size)
+    meas = camera.lens.undistort(obs_c.reshape(-1, 2)).reshape(-1, 4, 2)
+    cam_from_field = camera.pose.inverse()
+    fx = camera.lens.fx
+
+    # Initial frame poses: from any tag in the frame by single-tag PnP and its current mount.
+    x0 = []
+    for j in free:
+        r = setup.robot_tags[j]
+        x0 += [r.x, r.y, r.z, np.radians(r.yaw_deg)]
+    frame0 = np.zeros((len(frames), 3))
+    have = np.zeros(len(frames), bool)
+    for t, i, c in zip(obs_t, obs_id, obs_c):
+        k = fidx[t]
+        if have[k] and i != fixed_tag:
+            continue
+        p = single_tag_field_pose(camera, c, size)
+        if p is None:
+            continue
+        rp = p @ robot[int(i)].inverse()
+        frame0[k] = rp.planar_xyt()
+        have[k] = True
+    frames_ok = have
+    x0 = np.array(x0 + list(frame0.ravel()))
+    nm = 4 * len(free)
+    fixed_pose = robot[fixed_tag]
+    slot = {j: k for k, j in enumerate(free)}
+
+    def residuals(p):
+        mounts = {fixed_tag: fixed_pose.apply(local)}
+        for j in free:
+            q = p[4 * slot[j]: 4 * slot[j] + 4]
+            mounts[j] = Pose3(rot_z(q[3]), q[:3]).apply(local)
+        out = np.empty((len(obs_t), 8))
+        for n in range(len(obs_t)):
+            k = fidx[obs_t[n]]
+            f = p[nm + 3 * k: nm + 3 * k + 3]
+            pc = cam_from_field.apply(Pose3.planar(f[0], f[1], f[2]).apply(mounts[int(obs_id[n])]))
+            out[n] = ((pc[:, :2] / np.maximum(pc[:, 2:3], 1e-3) - meas[n]) * fx).ravel()
+        out[~frames_ok[[fidx[t] for t in obs_t]]] = 0.0
+        return out.ravel()
+
+    sparsity = lil_matrix((8 * len(obs_t), len(x0)), dtype=int)
+    for n in range(len(obs_t)):
+        rows = slice(8 * n, 8 * n + 8)
+        j = int(obs_id[n])
+        if j != fixed_tag:
+            sparsity[rows, 4 * slot[j]: 4 * slot[j] + 4] = 1
+        k = fidx[obs_t[n]]
+        sparsity[rows, nm + 3 * k: nm + 3 * k + 3] = 1
+    result = least_squares(residuals, x0, jac_sparsity=sparsity, method="trf", loss="soft_l1", f_scale=2.0,
+                           x_scale="jac", max_nfev=200)
+    r = result.fun.reshape(-1, 4, 2)
+    per_tag = {j: float(np.sqrt(np.mean(np.sum(r[obs_id == j] ** 2, axis=2)))) for j in [fixed_tag] + free}
+    out = dict(setup.robot_tags)
+    for j in free:
+        q = result.x[4 * slot[j]: 4 * slot[j] + 4]
+        out[j] = RobotTag(j, float(q[0]), float(q[1]), float(q[2]), float(np.degrees(np.angle(np.exp(1j * q[3])))))
+    return out, {"refined": free, "frames": int(len(frames)), "per_tag_rms_px": per_tag,
+                 "rms_px": float(np.sqrt(np.mean(np.sum(r ** 2, axis=2)))), "pairs": pair_counts}

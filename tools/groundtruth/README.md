@@ -7,6 +7,22 @@ Status: the full pipeline works on real sessions: lens calibration, tag detectio
 robot tag mounts from video, clock sync, truth, and the QuestNav comparison report. First results
 are for runs 1 and 2 (GoPro only; see "Known limits").
 
+## Measure the field layout
+
+If the hub tags are not at their layout positions, measure where they are and write a custom
+WPILib layout. One fixed camera that sees the tags is enough; one tag keeps its official pose:
+
+```bash
+.venv/bin/python -m groundtruth.maplayout --lens sessions/run2/lens_gopro.json \
+    --tags sessions/run2/tags_gopro.npz --reference 25 --measure 24 26 21 \
+    --out ../../src/main/deploy/apriltag/hallway-5010.json
+```
+
+The report gives each tag's offset along and out of its face, height, yaw, tilt and uncertainty.
+A tag that is not in the video keeps its base layout pose. The same file goes to QuestNav (upload
+it on the headset web page), the robot code (`QuestNavSubsystem.FIELD_LAYOUT_FILE`) and this tool
+(`"layout"` in `setup.json`, relative to the `setup.json` folder).
+
 ## Analyze a session
 
 1. Detect the tags in each camera's video (once per video; about real time for 4K):
@@ -41,6 +57,8 @@ drift and consistency).
 
 ### Known limits
 
+- Robot tag mounts are fitted from the turn-in-place frames, then refined from every frame with
+  two or more robot tags (the best-fitted tag stays fixed).
 - Without measured robot tag yaws, the robot's heading zero is not known from the video. With a
   path that has shape (Drift Loop), the analysis takes it from the Quest path; heading errors are
   then consistency, not absolute heading.
@@ -121,6 +139,7 @@ with a tag on each bumper corner, and two GoPro-like cameras 90° apart and 2.3 
 | `robotlog.py` | Reads the Quest frames, gyro, fused pose, wiggle and routine windows, and snapshots from a `.wpilog` |
 | `mounts.py` | Robot tag mounts from the turn-in-place frames, and a mount-free heading track for the first clock sync |
 | `session.py` | The session analysis and report |
+| `maplayout.py` | Hub tag poses from video, written as a custom WPILib field layout |
 
 ## Frames
 

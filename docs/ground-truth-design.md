@@ -1,17 +1,18 @@
 # Ground truth from GoPro video: design
 
 Status: the pipeline is built and runs on real sessions (`tools/groundtruth/`, see its README).
-First results (2026-11-19, GoPro only, rough setup):
+First results (updated 2026-11-23, GoPro only, rough robot tag mounts):
 
 | Session | QuestNav | Aligned position error | Aligned heading error |
 |---|---|---|---|
-| Run 1 (Turn Sweep, in place) | Aligned to the field | 0.4 cm RMS, max 1.5 cm | 0.7° RMS |
-| Run 2 (Turn Sweep and Drift Loop) | Not aligned to the field | 1.8 cm RMS; Drift Loop 4.4 cm RMS, max 9.3 cm | 0.8° RMS |
+| Run 1 (Turn Sweep, in place) | Aligned to the field | 0.4 cm RMS, max 1.4 cm | 0.7° RMS |
+| Run 2 (Turn Sweep and Drift Loop) | Not aligned to the field | 1.6 cm RMS; Drift Loop 2.0 cm RMS, max 4.6 cm | 0.9° RMS |
 
-Absolute (field-frame) errors are not valid yet: in run 1 tag 24 was out of position (QuestNav
-anchored to it; absolute offset about 30 cm), and in run 2 QuestNav never aligned to the field
-(tag 24 was at tag 21's position, 0.596 m from the corner, measured from video). The robot tag
-mounts are fitted from video; measured mounts and a passing Akaso calibration are still needed.
+Absolute (field-frame) errors are not valid yet. The hub tags cannot be moved, and tag 24 is about
+0.61 m from the corner (official 0.248 m). In run 1 QuestNav anchored about 30 cm off; in run 2 it
+never aligned to the field. The hallway field layout (`src/main/deploy/apriltag/hallway-5010.json`,
+measured from the run 2 GoPro video with tag 25 as reference, about ±1 cm) has the real tag poses.
+QuestNav must use it (upload on the headset) for run 3. The robot code loads it.
 
 ## Goal
 

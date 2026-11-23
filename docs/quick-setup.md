@@ -14,17 +14,19 @@ Team 5010. roboRIO: `10.50.10.2`. Headset: a `10.50.10.2xx` address that can cha
 
 ## 2. Hub tags
 
-The hub is on the outside corner of the T junction.
+The hub is on the outside corner of the T junction. The tags stay where they are on the wall. The
+**hallway field layout** (`src/main/deploy/apriltag/hallway-5010.json`) has their real positions,
+measured from video with tag 25 as the reference. QuestNav and the robot code must both use it.
 
-| Tag | Face | Center from the corner | Center height |
-|---|---|---|---|
-| 24 | Face toward the 16 ft hallway (the test area) | 9.8 in | 44.25 in |
-| 21 | Same face as 24 | 23.8 in | 44.25 in |
-| 25 | Face toward the 11 ft hallway (the mural) | 9.8 in | 44.25 in |
-| 26 | Same face as 25 | 23.7 in | 44.25 in |
+| Tag | Face | Real position (hallway layout) |
+|---|---|---|
+| 25 | Face toward the 11 ft hallway (the mural) | Reference: official position |
+| 26 | Same face as 25 | Official position, within 1.2 cm |
+| 24 | Face toward the 16 ft hallway (the test area) | About 0.61 m from the corner (official: 0.248 m), turned 2.6° |
+| 21 | Not on the wall | Not used |
 
-- [ ] Facing tag 24, tag 21 is on your left and the corner is on your right.
-- [ ] The black square of each tag is 6.5 in.
+- [ ] **Do not move, remove or re-tape a hub tag.** If a tag moves, measure the layout again
+      (see the ground-truth tool README, "Measure the field layout") and upload it again.
 - [ ] Each sheet is flat, with tape on all four edges.
 - [ ] No other tags with IDs 1 to 32 are in view anywhere in the hallway.
 
@@ -84,11 +86,23 @@ curl -4 -X POST "http://10.50.10.203:5801/api/config" -H "Content-Type: applicat
 
 If the command gets no answer, see [Problems](#problems).
 
+- [ ] **Field layout (one time, and again after any change to the layout file).** Open the QuestNav
+      web page at `http://<headset address>:5801`. In the AprilTag settings, upload
+      `src/main/deploy/apriltag/hallway-5010.json` as a custom field layout, select it, and restart
+      QuestNav. The layout takes effect only after the restart. To upload from the Mac instead:
+
+```bash
+python3 -c 'import json;print(json.dumps({"name":"hallway-5010","content":open("src/main/deploy/apriltag/hallway-5010.json").read()}))' | curl -4 -X POST "http://10.50.10.203:5801/api/apriltag-field-layouts" -H "Content-Type: application/json" -d @-
+```
+
+      Then select `hallway-5010.json` on the web page and restart QuestNav.
+
 ## 6. Robot code and dashboard
 
 - [ ] Turn on the robot. Connect the driver station.
 - [ ] On the dashboard, `QuestNav/Connected` is true.
 - [ ] `Test/Settings/Tag ID` is 24 and `questnav/Target Tag ID` is 24. (24 is the default.)
+- [ ] `questnav/Field Layout` shows `apriltag/hallway-5010.json`.
 - [ ] Set `Test/Settings/Bumper Length (m)` and `Test/Settings/Bumper Width (m)` to the measured
       robot size.
 - [ ] Set `Test/Settings/Sync Wiggle` to true if a camera records video. Else set it to false.

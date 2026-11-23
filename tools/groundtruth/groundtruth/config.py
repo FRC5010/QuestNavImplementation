@@ -117,4 +117,8 @@ class Setup:
 
     @staticmethod
     def load(path: str | Path) -> "Setup":
-        return Setup.from_dict(json.loads(Path(path).read_text()))
+        """Reads setup.json. A relative "layout" path is relative to the setup.json folder."""
+        d = json.loads(Path(path).read_text())
+        if "layout" in d and not Path(d["layout"]).is_absolute():
+            d["layout"] = str((Path(path).parent / d["layout"]).resolve())
+        return Setup.from_dict(d)

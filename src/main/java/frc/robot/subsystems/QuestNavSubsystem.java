@@ -1,5 +1,7 @@
 package frc.robot.subsystems;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -19,6 +21,7 @@ import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -43,9 +46,29 @@ public class QuestNavSubsystem extends SubsystemBase {
 
     private Translation2d _calculatedOffsetToRobotCenter = new Translation2d();
 
-    // Field layout for the current game; used to report the distance to a chosen AprilTag.
-    public static final AprilTagFieldLayout FIELD_LAYOUT =
-            AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    /**
+     * Field layout file in the deploy folder, or null for the official field. The hallway layout
+     * has the hub tags where they really are on the wall (measured from video with
+     * tools/groundtruth maplayout; tag 25 keeps its official pose). It must match the layout
+     * selected on the headset. Set this to null at a competition.
+     */
+    public static final String FIELD_LAYOUT_FILE = "apriltag/hallway-5010.json";
+
+    // Field layout; used to report the distance to a chosen AprilTag and by the test routines.
+    public static final AprilTagFieldLayout FIELD_LAYOUT = loadFieldLayout();
+
+    private static AprilTagFieldLayout loadFieldLayout() {
+        if (FIELD_LAYOUT_FILE != null) {
+            Path path = Filesystem.getDeployDirectory().toPath().resolve(FIELD_LAYOUT_FILE);
+            try {
+                return new AprilTagFieldLayout(path);
+            } catch (IOException e) {
+                DriverStation.reportError("Could not load field layout " + path + ", using the official field: "
+                        + e.getMessage(), false);
+            }
+        }
+        return AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+    }
     private static final int DEFAULT_TARGET_TAG_ID = 24; // The test area is in front of tag 24 (see docs/ground-truth-design.md).
     private int _calculatedOffsetToRobotCenterCount = 0;
     private String networkTableRoot = "questnav";
@@ -67,6 +90,8 @@ public class QuestNavSubsystem extends SubsystemBase {
         this.drivetrain = drivetrain;
         // Editable on the dashboard to measure against a different tag.
         SmartDashboard.putNumber(networkTableRoot + "/Target Tag ID", DEFAULT_TARGET_TAG_ID);
+        SmartDashboard.putString(networkTableRoot + "/Field Layout",
+                FIELD_LAYOUT_FILE == null ? "official 2026 field" : FIELD_LAYOUT_FILE);
         // Initialization code for the QuestNav subsystem
         questNav.onConnected(() -> DriverStation.reportWarning("QuestNav connected", false));
         questNav.onDisconnected(() -> DriverStation.reportError("QuestNav disconnected", false));

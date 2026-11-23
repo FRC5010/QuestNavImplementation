@@ -2,16 +2,60 @@
   "_comment": "Measurements for one hallway setup. Copy to setup.json and replace the values with your measurements. Positions in meters, angles in degrees.",
   "tag_size_m": 0.1651,
   "reference_tag": 24,
-  "hub_tag_ids": [24, 21, 25, 26],
+  "hub_tag_ids": [
+    24,
+    25,
+    26
+  ],
   "robot_tags": [
-    {"id": 1, "x": 0.40, "y": 0.40, "z": 0.30, "yaw_deg": 45},
-    {"id": 2, "x": 0.40, "y": -0.40, "z": 0.30, "yaw_deg": -45},
-    {"id": 3, "x": -0.40, "y": -0.40, "z": 0.30, "yaw_deg": -135},
-    {"id": 4, "x": -0.40, "y": 0.40, "z": 0.30, "yaw_deg": 135}
+    {
+      "id": 1,
+      "x": 0.4,
+      "y": 0.4,
+      "z": 0.3,
+      "yaw_deg": 45
+    },
+    {
+      "id": 2,
+      "x": 0.4,
+      "y": -0.4,
+      "z": 0.3,
+      "yaw_deg": -45
+    },
+    {
+      "id": 3,
+      "x": -0.4,
+      "y": -0.4,
+      "z": 0.3,
+      "yaw_deg": -135
+    },
+    {
+      "id": 4,
+      "x": -0.4,
+      "y": 0.4,
+      "z": 0.3,
+      "yaw_deg": 135
+    }
   ],
   "floor_tags": [
-    {"id": 50, "distance": 1.7, "lateral": -0.8, "top_yaw_deg": 0},
-    {"id": 51, "distance": 1.7, "lateral": 0.8, "top_yaw_deg": 90},
-    {"id": 52, "distance": 3.3, "lateral": 0.0, "top_yaw_deg": 180}
-  ]
+    {
+      "id": 50,
+      "distance": 1.7,
+      "lateral": -0.8,
+      "top_yaw_deg": 0
+    },
+    {
+      "id": 51,
+      "distance": 1.7,
+      "lateral": 0.8,
+      "top_yaw_deg": 90
+    },
+    {
+      "id": 52,
+      "distance": 3.3,
+      "lateral": 0.0,
+      "top_yaw_deg": 180
+    }
+  ],
+  "layout": "../../src/main/deploy/apriltag/hallway-5010.json"
 }
