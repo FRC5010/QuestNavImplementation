@@ -23,6 +23,7 @@ import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import frc.robot.generated.TunerConstants;
 import frc.robot.lib.BLine.FollowPath;
+import frc.robot.lib.BLine.Path;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.Utility;
@@ -70,7 +71,26 @@ public class RobotContainer {
         configureBindings();
         configureAutos();
 
-        FollowPath.Builder pathBuilder = new FollowPath.Builder(
+        // Two builders, because BLine resets the robot's pose at the start of EVERY path built
+        // with withPoseReset (see the "Multi-step autos" notes above twoStepExampleAuto).
+        //   firstPathBuilder: for the first path of an auto. Resets the pose to the path's start,
+        //                     which is where we placed the robot on the field.
+        //   laterPathBuilder: for every path after that. Never resets the pose.
+        FollowPath.Builder firstPathBuilder = newPathBuilder().withPoseReset(drivetrain::resetPose);
+        FollowPath.Builder laterPathBuilder = newPathBuilder();
+
+        // One chooser entry per path file (each built with firstPathBuilder) ...
+        autos = new BLineAutos(firstPathBuilder, driveForwardAuto(), drivetrain::getPose);
+        // ... plus the hand-built multi-step autos.
+        autos.add(TWO_STEP_EXAMPLE_AUTO, twoStepExampleAuto(firstPathBuilder, laterPathBuilder));
+    }
+
+    /**
+     * A path-following builder with our controller gains, but no pose reset. Each call makes a new
+     * builder so adding withPoseReset to one does not change the other.
+     */
+    private FollowPath.Builder newPathBuilder() {
+        return new FollowPath.Builder(
             drivetrain,
             drivetrain::getPose,
             drivetrain::getRobotRelativeSpeeds,
@@ -81,10 +101,70 @@ public class RobotContainer {
             new PIDController(5.0, 0.0, 0.0),
             new PIDController(0.2, 0.0, 0.0)  // cross-track
         ).withDefaultShouldFlip()
-         .withTRatioBasedTranslationHandoffs(true)
-         .withPoseReset(drivetrain::resetPose);
+         .withTRatioBasedTranslationHandoffs(true);
+    }
 
-        autos = new BLineAutos(pathBuilder, driveForwardAuto(), drivetrain::getPose);
+    /** Chooser name of {@link #twoStepExampleAuto}. */
+    public static final String TWO_STEP_EXAMPLE_AUTO = "2025 Two-Step Example";
+
+    /*
+     * Multi-step autos: how to make the robot wait for an action
+     * -----------------------------------------------------------
+     * 1. A BLine path never stops partway. Waypoints in the middle of a path are pass-through:
+     *    the robot rounds the corner and keeps going. It only stops at the LAST point of a path.
+     *
+     * 2. So if the robot must stop and do something (score, pick up), END the path there.
+     *    Then put the action and the next path after it in a Commands.sequence, as below.
+     *    The sequence runs one step at a time: a step starts only when the one before it ends.
+     *
+     * 3. The action decides how long the robot waits. Make it END when the job is really done
+     *    (a sensor sees the piece is gone, the elevator is at height), not after a guessed time.
+     *    A fixed wait is too long on a fresh battery and too short on a tired one.
+     *    Always add .withTimeout(seconds): if a sensor never reports, the auto skips one step
+     *    instead of sitting at the reef until the end of the match.
+     *
+     * 4. Things that should run DURING the drive (intake, spinning up a shooter): run them
+     *    alongside the path, for example
+     *        laterPathBuilder.build(path).deadlineFor(intake.run())
+     *    The path is the "deadline": the intake runs while the robot drives and is stopped when
+     *    the path ends.
+     *    BLine event triggers (FollowPath.registerEventTrigger) can also start a command at a
+     *    point along a path, but BLine only schedules it and keeps driving. That command is not
+     *    part of the auto: nothing waits for it, it is NOT stopped when the path or the auto ends,
+     *    and it can fight the auto for a subsystem. Never use a trigger for something the next
+     *    step depends on.
+     *
+     * 5. The pose-reset trap. Only the FIRST path may use firstPathBuilder. If a later path reset
+     *    the pose, the robot would "teleport" its estimate to that path's start (position only;
+     *    BLine keeps the current heading), wherever it really is, and every error from earlier
+     *    paths would be hidden. In simulation it is worse: a pose
+     *    reset also moves the simulated robot, so a wrong auto would still look perfect.
+     *
+     * 6. Each path should start where the previous one ended. The next path starts from wherever
+     *    the robot really is, so a gap shows up as a sharp correction at the start of the path.
+     *    Build the paths in the BLine GUI by continuing from the end point.
+     */
+
+    /**
+     * Example multi-step auto: drive to the reef, "score", then back out. Copy this pattern for
+     * real autos. Blue side; BLine flips both paths for red.
+     */
+    private Command twoStepExampleAuto(FollowPath.Builder firstPathBuilder, FollowPath.Builder laterPathBuilder) {
+        return Commands.sequence(
+            // Step 1: first path of the auto, so it resets the pose to its start.
+            // Ends stopped in front of reef face tag 21 at (5.9, 4.021).
+            firstPathBuilder.build(new Path("2025-start-to-reef-face")),
+
+            // Step 2: the action. The robot is stopped at the reef while this runs.
+            // On a real robot this is the scoring command, ending on a sensor, with a timeout:
+            //     scorer.score().until(() -> !scorer.hasCoral()).withTimeout(1.5)
+            // This sandbox has no mechanisms, so a fixed 1 s wait stands in for scoring.
+            Commands.waitSeconds(1.0).withName("Score (stand-in)"),
+
+            // Step 3: a later path, so it does NOT reset the pose. It starts at (5.9, 4.021),
+            // exactly where step 1 ended.
+            laterPathBuilder.build(new Path("2025-reef-face-back-out"))
+        ).withName(TWO_STEP_EXAMPLE_AUTO);
     }
 
     /** Call every robot loop to keep the sim/AdvantageScope field view up to date. */

@@ -74,6 +74,21 @@ public class BLineAutos {
         SmartDashboard.putData("BLine Field", field);
     }
 
+    /**
+     * Adds a hand-built auto (for example several paths chained with actions between them, see
+     * {@code RobotContainer.twoStepExampleAuto}) to the chooser. The constructor already added one
+     * entry per path file; this is for autos that are more than a single path.
+     *
+     * <p>No path is drawn on the field for these entries: the auto may use several paths.
+     */
+    public void add(String name, Command command) {
+        if (entries.containsKey(name)) {
+            throw new IllegalArgumentException("An auto named '" + name + "' already exists");
+        }
+        entries.put(name, new Entry(command, null));
+        chooser.addOption(name, name);
+    }
+
     /** Names (without ".json") of every path file in the deploy directory, sorted. */
     public static List<String> discoverPathNames() {
         File[] files = new File(Filesystem.getDeployDirectory(), PATHS_DIRECTORY)

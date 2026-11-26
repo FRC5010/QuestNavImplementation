@@ -1,8 +1,10 @@
 package frc.robot;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -99,5 +101,44 @@ class AutoSimulationTest {
         Pose2d finalPose = container.drivetrain.getPose();
         assertEquals(0.0, finalPose.getTranslation().getDistance(end), tolerance + 0.05,
                 name + " finished at " + finalPose + " but should end near " + end);
+    }
+
+    /**
+     * The multi-step example: path, 1 s "score", path. Checks the pose is reset only once (by the
+     * first path), so the second path really drives from where the first one stopped, and that
+     * the simulated robot (truth, not the estimate) ends where the second path ends.
+     */
+    @Test
+    void twoStepExampleResetsPoseOnceAndEndsAtTheSecondPath() throws InterruptedException {
+        List<Pose2d> poseResets = new ArrayList<>();
+        container.drivetrain.addPoseResetListener(poseResets::add);
+        Command auto = container.autos.get(RobotContainer.TWO_STEP_EXAMPLE_AUTO);
+
+        DriverStationSim.setAutonomous(true);
+        DriverStationSim.setEnabled(true);
+        DriverStationSim.notifyNewData();
+        CommandScheduler.getInstance().schedule(auto);
+
+        long start = System.nanoTime();
+        long deadline = start + (long) (TIMEOUT_SECONDS * 1e9);
+        while (CommandScheduler.getInstance().isScheduled(auto) && System.nanoTime() < deadline) {
+            CommandScheduler.getInstance().run();
+            Thread.sleep((long) (LOOP_SECONDS * 1000));
+        }
+        double elapsedSeconds = (System.nanoTime() - start) / 1e9;
+
+        assertFalse(CommandScheduler.getInstance().isScheduled(auto),
+                "two-step auto did not finish within " + TIMEOUT_SECONDS + " s");
+        assertEquals(1, poseResets.size(), "only the first path may reset the pose, resets: " + poseResets);
+        assertEquals(new Path("2025-start-to-reef-face").getStartPose().getTranslation(),
+                poseResets.get(0).getTranslation(), "the reset should be to the first path's start");
+        assertTrue(elapsedSeconds > 1.0, "the 1 s score wait should be part of the auto, took " + elapsedSeconds);
+
+        Path second = new Path("2025-reef-face-back-out");
+        List<Translation2d> points = second.getTranslations();
+        Translation2d end = points.get(points.size() - 1);
+        Pose2d truePose = container.questNavSubsystem.getSim().orElseThrow().getTrueRobotPose();
+        assertEquals(0.0, truePose.getTranslation().getDistance(end), second.getEndTranslationToleranceMeters() + 0.05,
+                "simulated robot finished at " + truePose + " but should end near " + end);
     }
 }
