@@ -41,7 +41,6 @@ class QuestNavSimTest {
         sim.setLatencyMs(0);
         sim.setNoise(0, 0);
         sim.setOrigin(new Pose2d());
-        sim.setMountError(0, 0);
         awaitTrue(sim::isHeadsetConnected, "fake headset should connect to the NT server");
     }
 
@@ -131,26 +130,6 @@ class QuestNavSimTest {
     }
 
     @Test
-    void mountErrorKnobsShiftTheHeadsetInTheRobotFrame() {
-        // Robot at the origin facing +X. The headset is mounted at x = -0.02, y = -0.3; a physical
-        // mounting error of (+0.10, -0.05) in the robot frame puts it at (0.08, -0.35).
-        sim.setMountError(0.10, -0.05);
-
-        Pose3d quest = publishAndRead().questPose3d();
-
-        assertEquals(0.08, quest.getX(), EPS);
-        assertEquals(-0.35, quest.getY(), EPS);
-        assertEquals(0.3, quest.getZ(), EPS);
-    }
-
-    @Test
-    void mountErrorIsZeroByDefault() {
-        Pose3d quest = publishAndRead().questPose3d();
-        assertEquals(-0.02, quest.getX(), EPS);
-        assertEquals(-0.3, quest.getY(), EPS);
-    }
-
-    @Test
     void latencyBackdatesTheFrameTimestamp() throws InterruptedException {
         sim.setLatencyMs(100);
         // NT ignores a value stamped older than the topic's last one, and an earlier test's frame
@@ -172,9 +151,9 @@ class QuestNavSimTest {
             sim.update(new ChassisSpeeds(1.0, 0, 0), 0.02);
         }
 
-        assertEquals(0.0, sim.getTruePose().getX(), 1e-3);
-        assertEquals(1.0, sim.getTruePose().getY(), 1e-3);
-        assertEquals(90.0, sim.getTruePose().getRotation().getDegrees(), 1e-3);
+        assertEquals(0.0, sim.getTrueRobotPose().getX(), 1e-3);
+        assertEquals(1.0, sim.getTrueRobotPose().getY(), 1e-3);
+        assertEquals(90.0, sim.getTrueRobotPose().getRotation().getDegrees(), 1e-3);
     }
 
     @Test

@@ -13,7 +13,9 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -38,7 +40,6 @@ class QuestNavSimulationTest {
         sim.setLatencyMs(0);
         sim.setNoise(0, 0);
         sim.setTracking(true);
-        sim.setMountError(0, 0);
         long deadline = System.nanoTime() + 5_000_000_000L;
         while (!sim.isHeadsetConnected() && System.nanoTime() < deadline) {
             Thread.sleep(5);
@@ -71,11 +72,11 @@ class QuestNavSimulationTest {
         runLoops(0.5);
         // Corrupt only the estimator (the sim's true pose does not move).
         container.drivetrain.resetTranslation(new Translation2d(2.0, 2.0));
-        assertTrue(container.drivetrain.getPose().getTranslation().getDistance(sim.getTruePose().getTranslation()) > 2.0);
+        assertTrue(container.drivetrain.getPose().getTranslation().getDistance(sim.getTrueRobotPose().getTranslation()) > 2.0);
 
         runLoops(3.0);
 
-        double error = container.drivetrain.getPose().getTranslation().getDistance(sim.getTruePose().getTranslation());
+        double error = container.drivetrain.getPose().getTranslation().getDistance(sim.getTrueRobotPose().getTranslation());
         assertEquals(0.0, error, 0.05, "estimate should converge to the true pose, error was " + error);
     }
 
@@ -99,7 +100,7 @@ class QuestNavSimulationTest {
         container.drivetrain.resetPose(target);
         runLoops(1.0);
 
-        assertEquals(0.0, sim.getTruePose().getTranslation().getDistance(target.getTranslation()), 1e-3);
+        assertEquals(0.0, sim.getTrueRobotPose().getTranslation().getDistance(target.getTranslation()), 1e-3);
         // Quest still agrees with the reset, so vision must not drag the estimate away from it.
         assertEquals(0.0, container.drivetrain.getPose().getTranslation().getDistance(target.getTranslation()), 0.05);
     }
@@ -124,7 +125,9 @@ class QuestNavSimulationTest {
     void offsetCalibrationRecoversAWrongMountingTransform() throws InterruptedException {
         // The code assumes one mount; physically the headset is 10 cm forward and 5 cm right of that.
         // Rotation is about the true robot center, so calibration should report that shift.
-        sim.setMountError(0.10, -0.05);
+        Transform3d assumed = container.questNavSubsystem.getRobotToQuest();
+        sim.setMountTransform(new Transform3d(
+                assumed.getTranslation().plus(new Translation3d(0.10, -0.05, 0.0)), assumed.getRotation()));
         // Start at a clean origin so the spin is the only motion.
         container.drivetrain.resetPose(new Pose2d());
         runLoops(0.5);

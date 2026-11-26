@@ -76,8 +76,9 @@ public class RobotContainer {
             drivetrain::getRobotRelativeSpeeds,
             drivetrain::driveRobotRelative,
             new PIDController(2.0, 0.0, 0.0), // translation
-            // Rotation: 1.0 stalled ~7 deg short in sim, outside the 2 deg end tolerance, so autos never ended.
-            new PIDController(3.0, 0.0, 0.0),
+            // Rotation: P-only stops where its output drops below drive friction. 1.0 stalled ~7 deg short
+            // in sim and 3.0 ~2.01 deg short (2025-l-shape), outside the 2 deg end tolerance, so autos never ended.
+            new PIDController(5.0, 0.0, 0.0),
             new PIDController(0.2, 0.0, 0.0)  // cross-track
         ).withDefaultShouldFlip()
          .withTRatioBasedTranslationHandoffs(true)

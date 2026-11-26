@@ -29,7 +29,6 @@ public class QuestNavSubsystem extends SubsystemBase {
     CommandSwerveDrivetrain drivetrain;
     // Translation and rotation from robot to QuestNav camera
     Transform3d ROBOT_TO_QUEST = new Transform3d(0, 0, 0.3, new Rotation3d(0, 0, -Math.PI / 2)); 
-    Transform3d ROBOT_TO_QUEST_SIM = new Transform3d(-0.02010203, -0.30405, 0.3, new Rotation3d(0, 0, -Math.PI / 2)); 
     Matrix<N3, N1> QUESTNAV_STD_DEVS = VecBuilder.fill(0.02, 0.02, 0.0872665); 
 
     // Soft reset state — applied in code without sending a command to the headset
@@ -52,7 +51,9 @@ public class QuestNavSubsystem extends SubsystemBase {
         questNav.onDisconnected(() -> DriverStation.reportError("QuestNav disconnected", false));
 
         if (RobotBase.isSimulation()) {
-            sim = new QuestNavSim(ROBOT_TO_QUEST_SIM, questNav.getLibVersion(), drivetrain.getPose());
+            // Sandbox: the simulated headset is mounted exactly where the code assumes, so the fused
+            // pose matches the true pose and BLine paths are judged on a perfect headset.
+            sim = new QuestNavSim(ROBOT_TO_QUEST, questNav.getLibVersion(), drivetrain.getPose());
             // Resetting the pose in sim stands in for physically placing the robot (and re-zeroing the headset).
             drivetrain.addPoseResetListener(sim::teleport);
             lastSimTime = Timer.getFPGATimestamp();

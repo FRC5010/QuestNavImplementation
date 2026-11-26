@@ -32,6 +32,11 @@ public class BLineAutos {
     private static final String DEFAULT_AUTO_NAME = "Drive Forward (default)";
     private static final String PATH_OVERLAY_NAME = "Selected Auto";
 
+    // Set BLine's field size before any path is flipped (here or in FollowPath).
+    static {
+        FieldConfig.applyToBLine();
+    }
+
     private record Entry(Command command, Path path) {}
 
     private final Map<String, Entry> entries = new LinkedHashMap<>();

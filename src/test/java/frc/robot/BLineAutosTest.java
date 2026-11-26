@@ -39,4 +39,15 @@ class BLineAutosTest {
         assertEquals(before, blue.getStartPose(), "original path must be unchanged");
         assertEquals(before, BLineAutos.pathForAlliance(blue, false).getStartPose());
     }
+
+    @Test
+    void redFlipUsesTheConfiguredFieldSize() {
+        // 2025 Reefscape is 17.548 x 8.042 m; BLine's built-in default is the 2026 field (16.54 x 8.07).
+        Pose2d blue = new Path("2025-start-to-reef-face").getStartPose();
+        Pose2d red = BLineAutos.pathForAlliance(new Path("2025-start-to-reef-face"), true).getStartPose();
+
+        assertEquals(FieldConfig.LAYOUT.getFieldLength() - blue.getX(), red.getX(), 1e-6);
+        assertEquals(FieldConfig.LAYOUT.getFieldWidth() - blue.getY(), red.getY(), 1e-6);
+        assertEquals(17.548, FieldConfig.LAYOUT.getFieldLength(), 1e-3, "FieldConfig should be the 2025 field");
+    }
 }
